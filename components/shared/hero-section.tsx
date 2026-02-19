@@ -11,9 +11,19 @@ const HeroSection = () => {
                 <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900 dark:text-white mb-6">
                     Level up your <span className="text-indigo-500">habits.</span>
                 </h1>
-                <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed">
-                    The minimal 90-day challenge tracker designed for developers.
-                    Monitor your code, gym progress, and growth in one premium space.
+                <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed flex flex-col items-center gap-1">
+                    <div>
+                        The minimal <span className='underline underline-offset-4 decoration-emerald-500'>X-day</span> challenge tracker designed for developers.
+                        Monitor your code, life progress, and growth in one premium space.
+                    </div>
+                    <em className="text-sm text-slate-500 dark:text-slate-600">
+                        (Because your habits deserve a better dashboard than a spreadsheet.)
+                    </em>
+                    <p className='text-md md:text-lg text-slate-500 dark:text-slate-600 mt-4'>
+                        Powered by <span className="text-emerald-500">WhatsApp Sync</span> — progress updates happen automatically.
+                    </p>
+                </p>
+                <p>
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
