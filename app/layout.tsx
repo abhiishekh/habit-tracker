@@ -1,6 +1,27 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import localFont from 'next/font/local'
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
+import Link from "next/link";
+import Nav from "@/components/shared/nav";
+import DashboardFooter from "@/components/shared/dhasboard-footer";
+
+const myCustomFont = localFont({
+  src: [
+    {
+      path: '../public/fonts/font8.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/font8.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-custom',
+})
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,11 +44,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={myCustomFont.variable}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${myCustomFont.className} antialiased`}
       >
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="min-h-screen bg-slate-50 dark:bg-[#09090B] transition-colors duration-300">
+            <Nav />
+            <main className="container mx-auto py-8 px-6">
+
+              {children}
+            </main>
+
+            <DashboardFooter />
+          </div>
+
+        </ThemeProvider>
       </body>
     </html>
   );
