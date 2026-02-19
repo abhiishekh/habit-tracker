@@ -12,10 +12,11 @@ const Nav = () => {
                     UFL<span className="text-indigo-500">.</span>
                 </Link>
                 <div className="flex items-center gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
-                    <Link href="/habits" className={`hover:text-indigo-500 transition-colors ${pathname === '/habits' ? 'text-indigo-500' : ''}`}>Habits</Link>
-                     <Link href="/dashboard" className={`hover:text-indigo-500 transition-colors ${pathname === '/dashboard' ? 'text-indigo-500' : ''}`}>Dashboard</Link>
-                    <Link href="/todos" className={`text-slate-900 dark:text-white underline underline-offset-4 ${pathname === '/todos' ? 'text-indigo-500' : ''}`}>Todos</Link>
-                    <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-zinc-800" /> {/* User Profile placeholder */}
+                    {/* <Link href="/habits" className={`hover:text-indigo-500 transition-colors ${pathname === '/habits' ? 'text-indigo-500' : ''}`}>Habits</Link> */}
+                    <Link href="/dashboard" className={`hover:text-indigo-500 transition-colors ${pathname === '/dashboard' ? 'text-indigo-500' : ''}`}>Dashboard</Link>
+                    {/* <Link href="/todos" className={`text-slate-900 dark:text-white underline underline-offset-4 ${pathname === '/todos' ? 'text-indigo-500' : ''}`}>Todos</Link>
+                    */}
+                    <div className="h-8 w-8 rounded-full bg-slate-200 dark:bg-zinc-800" />
                 </div>
             </div>
         </nav>

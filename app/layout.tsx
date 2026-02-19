@@ -61,7 +61,7 @@ export default function RootLayout({
               {children}
             </main>
 
-            <DashboardFooter />
+            <DashboardFooter/>
           </div>
 
         </ThemeProvider>

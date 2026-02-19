@@ -3,7 +3,7 @@ import HabitImpactGraph from '../HabitImpactGraph'
 
 const HeroSection = () => {
     return (
-        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-zinc-950 px-6">
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-zinc-950 px-4">
             {/* Subtle Background Glow */}
             <div className="absolute top-0 -z-10 h-full w-full bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent" />
 
@@ -11,7 +11,7 @@ const HeroSection = () => {
                 <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900 dark:text-white mb-6">
                     Level up your <span className="text-indigo-500">habits.</span>
                 </h1>
-                <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed flex flex-col items-center gap-1">
+                {/* <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed flex flex-col items-center gap-1">
                     <div>
                         The minimal <span className='underline underline-offset-4 decoration-emerald-500'>X-day</span> challenge tracker designed for developers.
                         Monitor your code, life progress, and growth in one premium space.
@@ -22,9 +22,30 @@ const HeroSection = () => {
                     <p className='text-md md:text-lg text-slate-500 dark:text-slate-600 mt-4'>
                         Powered by <span className="text-emerald-500">WhatsApp Sync</span> — progress updates happen automatically.
                     </p>
-                </p>
-                <p>
-                </p>
+                </p> */}
+                <div className="flex flex-col items-center gap-5 mb-10 text-center px-4">
+
+                    {/* 1. The Killer Feature Badge - Instantly catches the eye */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-semibold shadow-sm">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        Automated via WhatsApp Sync
+                    </div>
+
+                    {/* 2. The Core Promise - Short, scannable, high contrast */}
+                    <h2 className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
+                        The minimal <span className="font-semibold text-slate-900 dark:text-white underline underline-offset-4 decoration-indigo-500">X-day challenge</span> tracker for developers.
+                        <br className="hidden md:block" /> Log your code, gym progress, and financial growth in one premium space.
+                    </h2>
+
+                    {/* 3. The Joke - Hidden on mobile to keep the screen clean */}
+                    <p className="hidden sm:block text-sm text-slate-400 dark:text-slate-500 italic mt-2">
+                        (Because your life reset deserves a better dashboard than a spreadsheet.)
+                    </p>
+
+                </div>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link
@@ -46,6 +67,9 @@ const HeroSection = () => {
             <div className="mt-20 w-full max-w-5xl rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 p-4 backdrop-blur-sm">
                 <HabitImpactGraph />
             </div>
+            <em className='text-slate-600 dark:text-slate-400'>
+                track your code, gym progress, and financial growth in one premium space.
+            </em>
         </div>
     )
 }

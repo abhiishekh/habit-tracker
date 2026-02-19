@@ -1,6 +1,4 @@
-// src/app/(dashboard)/layout.tsx
 import DashboardSidebar from "@/components/shared/dashboard-sidebar";
-import React from "react";
 
 export default function DashboardLayout({
   children,
@@ -9,12 +7,14 @@ export default function DashboardLayout({
 }) {
   return (
     <section className="flex min-h-screen bg-slate-50 dark:bg-[#09090B]">
-      {/* Sidebar - Minimal & Fixed */}
+      {/* Sidebar - Handles its own responsive width */}
       <DashboardSidebar />
 
-      {/* Main Content Area */}
-      <main className="flex-1 lg:pl-64">
-        <div className="p-8 md:p-12">
+      {/* Main Content Area - Padding adjusts to match sidebar width */}
+      {/* pl-16 prevents mobile content from hiding under the slim sidebar */}
+      {/* md:pl-64 pushes content over for the full desktop sidebar */}
+      <main className="flex-1 flex flex-col pl-8 md:pl-64 transition-all duration-300">
+        <div className=" pl-6 md:p-10 flex-1">
           {children}
         </div>
       </main>
