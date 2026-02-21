@@ -6,23 +6,28 @@ const HeroSection = () => {
         <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-zinc-950 px-4">
             {/* Subtle Background Glow */}
             <div className="absolute top-0 -z-10 h-full w-full bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent" />
+            {/* // animated grid lines */}
+            <div
+                className="absolute inset-0"
+                style={{
+                    background:
+                        "radial-gradient(circle at center, rgba(99,102,241,0.22) 0%, rgba(99,102,241,0.12) 30%, rgba(99,102,241,0.04) 50%, transparent 75%)",
+                }}
+            />
+            <div
+                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
+                style={{
+                    backgroundImage:
+                        "linear-gradient(#6366f1 1px,transparent 1px),linear-gradient(to right,#6366f1 1px,transparent 1px)",
+                    backgroundSize: "60px 60px",
+                }}
+            />
 
             <div className="text-center max-w-3xl">
                 <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900 dark:text-white mb-6">
                     Level up your <span className="text-indigo-500">habits.</span>
                 </h1>
-                {/* <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 mb-10 leading-relaxed flex flex-col items-center gap-1">
-                    <div>
-                        The minimal <span className='underline underline-offset-4 decoration-emerald-500'>X-day</span> challenge tracker designed for developers.
-                        Monitor your code, life progress, and growth in one premium space.
-                    </div>
-                    <em className="text-sm text-slate-500 dark:text-slate-600">
-                        (Because your habits deserve a better dashboard than a spreadsheet.)
-                    </em>
-                    <p className='text-md md:text-lg text-slate-500 dark:text-slate-600 mt-4'>
-                        Powered by <span className="text-emerald-500">WhatsApp Sync</span> — progress updates happen automatically.
-                    </p>
-                </p> */}
+
                 <div className="flex flex-col items-center gap-5 mb-10 text-center px-4">
 
                     {/* 1. The Killer Feature Badge - Instantly catches the eye */}

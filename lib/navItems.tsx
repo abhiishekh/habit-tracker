@@ -7,8 +7,8 @@ type NavItemProps = {
     label: string
     icon: LucideIcon
     active?: boolean
-    isExpanded?: boolean // Tells the item if the sidebar is open on mobile
-    onClick?: () => void // Allows the sidebar to close after a link is clicked
+    isExpanded?: boolean 
+    onClick?: () => void 
 }
 
 const NavItem = ({ href, label, icon: Icon, active = false, isExpanded = true, onClick }: NavItemProps) => {

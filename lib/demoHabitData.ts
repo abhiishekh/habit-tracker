@@ -4,7 +4,7 @@ export const habitAreaData = [
   { day: 5, predictable: 20, actual: 10 },
   { day: 7, predictable: 74, actual: 38 },
   { day: 10, predictable: 45, actual: 28 },
-  { day: 14, predictable: 60, actual: 40 },
-  { day: 21, predictable: 80, actual: 58 },
-  { day: 30, predictable: 10, actual: 3 },
+  { day: 14, predictable: 46, actual: 45 },
+  { day: 21, predictable: 75, actual: 80 },
+  { day: 30, predictable: 80, actual: 95 },
 ]

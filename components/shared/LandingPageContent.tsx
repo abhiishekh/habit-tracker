@@ -1,8 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
-import { MessageSquare, Github, Dumbbell, Wallet, Terminal, Zap, ArrowRight } from 'lucide-react';
+import { MessageSquare, Github, Dumbbell, Wallet, Terminal, Zap } from 'lucide-react';
+import { WaitlistSection } from './waitlist-section';
+import { prisma } from '@/lib/prisma';
 
-const LandingPageContent = () => {
+const LandingPageContent = async () => {
+    const users = await prisma.waitlist.findMany({
+        orderBy: { email: "desc" },
+    });
     return (
         <div className="w-full bg-slate-50 dark:bg-zinc-950 flex flex-col items-center pb-20">
 
@@ -77,7 +82,7 @@ transition-all duration-300 ease-out hover:border-blue-500 hover:shadow-blue-500
             </section>
 
             {/* --- 2. THE ANTI-SPREADSHEET MANIFESTO --- */}
-            <section className="w-full bg-emerald-50 dark:bg-emerald-950 py-24 px-4 my-12 relative overflow-hidden rounded-xl">
+            <section className="w-full bg-emerald-950 py-24 px-4 my-12 relative overflow-hidden rounded-xl">
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
                 <div className="max-w-3xl mx-auto text-center relative z-10">
                     <Terminal className="text-emerald-400 mx-auto mb-6" size={40} />
@@ -121,21 +126,8 @@ transition-all duration-300 ease-out hover:border-blue-500 hover:shadow-blue-500
                 </div>
             </section>
 
-            {/* --- 4. BOTTOM CTA --- */}
-            <section className="w-full max-w-3xl px-4 py-24 text-center">
-                <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
-                    Ready to Unfuck Your Life?
-                </h2>
-                <p className="text-lg text-slate-500 dark:text-slate-400 mb-10">
-                    Join the next cohort of developers tracking their 90-day transformation.
-                </p>
-                <Link
-                    href="/todos"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-slate-900/10 dark:shadow-white/10"
-                >
-                    Start Your 90 Days <ArrowRight size={20} />
-                </Link>
-            </section>
+            {/* --- 4. WAITLIST CTA --- */}
+            <WaitlistSection users={users} />
 
 
         </div>
