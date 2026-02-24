@@ -11,8 +11,8 @@ const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Habits", href: "/habits", icon: Dumbbell },
     { name: "Todos", href: "/todos", icon: List },
-    { name: "Insights", href: "/stats", icon: InfoIcon },
-    { name: "Coding & Work", href: "/dashboard/coding", icon: Code2 },
+    { name: "Insights", href: "/insights", icon: InfoIcon },
+    { name: "Coding & Work", href: "/coding", icon: Code2 },
 ];
 
 const DashboardSidebar = () => {
