@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { joinWaitlist } from "@/app/actions/waitlist";
 import { ArrowRight, Sparkles, Users, Lock, Zap } from "lucide-react";
 import { getColorFromEmail, getInitialsFromEmail } from "@/lib/getInitialsOfEmails";
+import { SubmitButton } from "../ui/submitButton";
 
 const stats = [
     { value: "2,400+", label: "builders signed up" },
@@ -57,7 +58,7 @@ export function WaitlistSection({ users }: WaitlistSectionProps) {
     }
 
     return (
-        <section className="relative w-full overflow-hidden py-32 px-4">
+        <section className="relative w-full overflow-hidden py-32 px-6">
             <div className="absolute top-0 -z-10 h-full w-full pointer-events-none
   bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))]
   from-indigo-500/10 via-transparent to-transparent" />
@@ -134,7 +135,7 @@ export function WaitlistSection({ users }: WaitlistSectionProps) {
               focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10
               shadow-sm"
                     />
-                    <button
+                    {/* <button
                         type="submit"
                         disabled={isPending}
                         className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-7 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition-all
@@ -170,7 +171,11 @@ export function WaitlistSection({ users }: WaitlistSectionProps) {
                                 <ArrowRight size={16} />
                             </>
                         )}
-                    </button>
+                    </button> */}
+                    <SubmitButton 
+                    loadingText="Joining"
+                    buttonText="Join the WaitList"
+                    />
                 </form>
 
                 {/* Feedback message */}

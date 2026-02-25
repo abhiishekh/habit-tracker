@@ -9,10 +9,10 @@ const LandingPageContent = async () => {
         orderBy: { email: "desc" },
     });
     return (
-        <div className="w-full bg-slate-50 dark:bg-zinc-950 flex flex-col items-center pb-20 px-6">
+        <div className="w-full bg-slate-50 dark:bg-zinc-950 flex flex-col items-center ">
 
             {/* --- 1. THE BENTO GRID FEATURES --- */}
-            <section className="w-full max-w-5xl px-4 py-24">
+            <section className="w-full max-w-5xl px-6 py-24">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">
                         Everything you care about. <span className="text-indigo-500">Zero friction.</span>
@@ -82,21 +82,23 @@ transition-all duration-300 ease-out hover:border-blue-500 hover:shadow-blue-500
             </section>
 
             {/* --- 2. THE ANTI-SPREADSHEET MANIFESTO --- */}
-            <section className="w-full bg-emerald-950 py-24 px-4 my-12 relative overflow-hidden rounded-xl">
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
-                <div className="max-w-3xl mx-auto text-center relative z-10">
-                    <Terminal className="text-emerald-400 mx-auto mb-6" size={40} />
-                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
-                        Spreadsheets are where habits go to die.
-                    </h2>
-                    <p className="text-lg md:text-xl text-slate-400 leading-relaxed">
-                        You've built Notion templates. You've made Google Sheets. And you abandoned them by day 4 because manual data entry is a chore. UFL is opinionated: automate what you can (code), and make the rest as easy as sending a text.
-                    </p>
-                </div>
-            </section>
+            <div className='px-6 w-full'>
+                <section className="w-full bg-emerald-950 py-24 px-6 my-12 relative overflow-hidden rounded-xl">
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
+                    <div className="max-w-3xl mx-auto text-center relative z-10">
+                        <Terminal className="text-emerald-400 mx-auto mb-6" size={40} />
+                        <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">
+                            Spreadsheets are where habits go to die.
+                        </h2>
+                        <p className="text-lg md:text-xl text-slate-400 leading-relaxed">
+                            You've built Notion templates. You've made Google Sheets. And you abandoned them by day 4 because manual data entry is a chore. UFL is opinionated: automate what you can (code), and make the rest as easy as sending a text.
+                        </p>
+                    </div>
+                </section>
+            </div>
 
             {/* --- 3. HOW IT WORKS --- */}
-            <section className="w-full max-w-5xl px-4 py-24">
+            <section className="w-full max-w-5xl px-6 py-24">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">How the system works</h2>
                 </div>
