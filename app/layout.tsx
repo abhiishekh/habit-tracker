@@ -59,7 +59,7 @@ export default function RootLayout({
           <Providers>
             <div className="min-h-screen bg-slate-50 dark:bg-[#09090B] transition-colors duration-300">
               <Nav />
-              <main className="container mx-auto py-8 px-6">
+              <main className="container mx-auto py-8 ">
 
                 {children}
               </main>

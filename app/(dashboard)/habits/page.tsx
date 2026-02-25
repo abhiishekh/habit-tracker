@@ -28,7 +28,7 @@ export default function HabitsPage() {
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto pb-20 px-4">
+    <div className="max-w-5xl mx-auto pb-20 px-6">
       <div className="flex justify-between items-end mb-12">
         <div>
           <div className="flex items-center gap-2 mb-2">

@@ -58,12 +58,22 @@ export function WaitlistSection({ users }: WaitlistSectionProps) {
 
     return (
         <section className="relative w-full overflow-hidden py-32 px-4">
-            {/* Layered background */}
-            {/* <div className="absolute inset-0 bg-slate-50 dark:bg-zinc-950" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_100%,rgba(99,102,241,0.12),transparent)]" /> */}
-            {/* Animated grid lines */}
+            <div className="absolute top-0 -z-10 h-full w-full pointer-events-none
+  bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))]
+  from-indigo-500/10 via-transparent to-transparent" />
+
+            {/* Radial overlay */}
             <div
-                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                    background:
+                        "radial-gradient(circle at center, rgba(99,102,241,0.22) 0%, rgba(99,102,241,0.12) 30%, rgba(99,102,241,0.04) 50%, transparent 75%)",
+                }}
+            />
+
+            {/* Grid lines */}
+            <div
+                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none"
                 style={{
                     backgroundImage:
                         "linear-gradient(#6366f1 1px,transparent 1px),linear-gradient(to right,#6366f1 1px,transparent 1px)",

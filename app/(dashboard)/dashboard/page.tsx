@@ -44,7 +44,7 @@ import TaskForm from '@/components/tasks/task-form'
 
 const Dashboard = () => {
     return (
-        <div className="space-y-8 pb-8">
+        <div className="space-y-8 pb-8 px-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>

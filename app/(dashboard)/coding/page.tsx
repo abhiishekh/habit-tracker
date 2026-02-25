@@ -88,7 +88,7 @@ export default function CodingPage() {
     ];
 
     return (
-        <div className="max-w-5xl mx-auto pb-20">
+        <div className="max-w-5xl mx-auto pb-20 px-6">
             <div className="mb-10">
                 <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Project Terminal</h1>
                 <p className="text-slate-500 text-lg">Your GitHub ecosystem, synced in real-time.</p>

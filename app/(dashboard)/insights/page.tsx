@@ -34,7 +34,7 @@ export default function InsightsPage() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 gap-4 text-indigo-500">
+            <div className="flex flex-col items-center justify-center py-20 px-6 gap-4 text-indigo-500">
                 <Loader2 size={40} className="animate-spin" />
                 <p className="font-medium">Crunching your 90-day data...</p>
             </div>
@@ -42,7 +42,7 @@ export default function InsightsPage() {
     }
 
     return (
-        <div className="max-w-6xl mx-auto pb-20 px-4 sm:px-0">
+        <div className="max-w-6xl mx-auto pb-20 px-6 sm:px-0">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4">
                 <div>
                     <div className="flex items-center gap-2 mb-2">

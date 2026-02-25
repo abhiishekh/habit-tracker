@@ -9,7 +9,7 @@ const LandingPageContent = async () => {
         orderBy: { email: "desc" },
     });
     return (
-        <div className="w-full bg-slate-50 dark:bg-zinc-950 flex flex-col items-center pb-20">
+        <div className="w-full bg-slate-50 dark:bg-zinc-950 flex flex-col items-center pb-20 px-6">
 
             {/* --- 1. THE BENTO GRID FEATURES --- */}
             <section className="w-full max-w-5xl px-4 py-24">

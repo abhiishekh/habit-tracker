@@ -3,19 +3,25 @@ import HabitImpactGraph from '../HabitImpactGraph'
 
 const HeroSection = () => {
     return (
-        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-zinc-950 px-4">
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-zinc-950 ">
             {/* Subtle Background Glow */}
-            <div className="absolute top-0 -z-10 h-full w-full bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent" />
-            {/* // animated grid lines */}
+
+            <div className="absolute top-0 -z-10 h-full w-full pointer-events-none
+  bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))]
+  from-indigo-500/10 via-transparent to-transparent" />
+
+            {/* Radial overlay */}
             <div
-                className="absolute inset-0"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                     background:
                         "radial-gradient(circle at center, rgba(99,102,241,0.22) 0%, rgba(99,102,241,0.12) 30%, rgba(99,102,241,0.04) 50%, transparent 75%)",
                 }}
             />
+
+            {/* Grid lines */}
             <div
-                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
+                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none"
                 style={{
                     backgroundImage:
                         "linear-gradient(#6366f1 1px,transparent 1px),linear-gradient(to right,#6366f1 1px,transparent 1px)",
@@ -55,13 +61,13 @@ const HeroSection = () => {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link
                         href="/todos"
-                        className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
+                        className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-indigo-500/20 active:scale-95 hover:cursor-pointer"
                     >
                         Start Tracking
                     </Link>
                     <Link
                         href="/journey"
-                        className="px-8 py-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white font-semibold rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all"
+                        className="px-8 py-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white font-semibold rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all hover:cursor-pointer"
                     >
                         View My Progress
                     </Link>
