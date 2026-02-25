@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 import { Github, ExternalLink, Star, GitFork, Loader2, FolderCode } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Separator } from "@/components/ui/separator";
 
 export default function CodingPage() {
     const [repos, setRepos] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loadingRepos, setLoadingRepos] = useState(true);
+    const [loadingStats, setLoadingStats] = useState(true);
+    const [stats, setStats] = useState<any>(null)
 
     useEffect(() => {
         // In a real app, we'd fetch from /api/coding which would use the user's GitHub token
@@ -47,12 +51,41 @@ export default function CodingPage() {
             } catch (error) {
                 console.error("Failed to fetch repos:", error);
             } finally {
-                setLoading(false);
+                setLoadingRepos(false)
+            }
+        };
+        const loadStats = async () => {
+            try {
+                const res = await fetch("/api/wakatime");
+                const data = await res.json();
+                setStats(data);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoadingStats(false);
             }
         };
 
+        loadStats();
         fetchRepos();
     }, []);
+
+    function toMinutes(seconds: number) {
+        return Math.round(seconds / 60);
+    }
+    const projectChartData = [
+        stats?.projects?.reduce((acc: any, p: any) => {
+            acc[p.name] = toMinutes(p.total_seconds);
+            return acc;
+        }, {})
+    ];
+
+    const languageChartData = [
+        stats?.languages?.reduce((acc: any, l: any) => {
+            acc[l.name] = toMinutes(l.total_seconds);
+            return acc;
+        }, {})
+    ];
 
     return (
         <div className="max-w-5xl mx-auto pb-20">
@@ -61,7 +94,7 @@ export default function CodingPage() {
                 <p className="text-slate-500 text-lg">Your GitHub ecosystem, synced in real-time.</p>
             </div>
 
-            {loading ? (
+            {loadingRepos ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4 text-indigo-500">
                     <Loader2 size={40} className="animate-spin" />
                     <p className="font-medium">Fetching your repositories...</p>
@@ -113,7 +146,142 @@ export default function CodingPage() {
                         <p className="text-xs text-slate-500 text-center">Sync another organization</p>
                     </button>
                 </div>
+
             )}
+
+            <Separator className="my-10 bg-red-600"/>
+            <div >
+                <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-8">
+                    Discipline Architect: Dev Stats
+                </h1>
+
+                {loadingStats ? (
+                    <div className="flex justify-center py-20 text-indigo-500">
+                        <Loader2 size={40} className="animate-spin" />
+                    </div>
+                ) : stats ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* multi project card */}
+                        <Card className="group overflow-hidden border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-300 rounded-3xl hover:shadow-xl hover:shadow-indigo-500/5">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
+                                    Projects — Time Spent (Minutes)
+                                </CardTitle>
+                                <CardDescription>
+                                    Today’s active projects
+                                </CardDescription>
+                            </CardHeader>
+
+                            <CardContent className="h-65">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={projectChartData}>
+                                        <XAxis hide />
+                                        <YAxis />
+                                        <Tooltip formatter={(v: number | undefined) => v !== undefined ? `${v} min` : ''} />
+
+                                        {stats.projects.map((p: any, i: number) => (
+                                            <Area
+                                                key={p.name}
+                                                type="monotone"
+                                                dataKey={p.name}
+                                                strokeWidth={2}
+                                                fillOpacity={0.15}
+                                            />
+                                        ))}
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                        {/* multi language card */}
+                        <Card className="group overflow-hidden border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-300 rounded-3xl hover:shadow-xl hover:shadow-indigo-500/5">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
+                                    Language — Time Spent (Minutes)
+                                </CardTitle>
+                                <CardDescription>
+                                    Today’s active Languages
+                                </CardDescription>
+                            </CardHeader>
+
+                            <CardContent className="h-65">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={languageChartData}>
+                                        <XAxis hide />
+                                        <YAxis />
+                                        <Tooltip formatter={(v: number | undefined) => v !== undefined ? `${v} min` : ''} />
+
+                                        {stats.languages.map((p: any, i: number) => (
+                                            <Area
+                                                key={p.name}
+                                                type="monotone"
+                                                dataKey={p.name}
+                                                strokeWidth={2}
+                                                fillOpacity={0.15}
+                                            />
+                                        ))}
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+                        {/* Projects Card */}
+                        <Card className="group overflow-hidden border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-300 rounded-3xl hover:shadow-xl hover:shadow-indigo-500/5">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">
+                                    Projects — Time Spent
+                                </CardTitle>
+                                <CardDescription>
+                                    Time invested across active projects
+                                </CardDescription>
+                            </CardHeader>
+
+                            <CardContent className="h-65">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={stats.projects}>
+                                        <XAxis dataKey="name" hide />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Bar
+                                            dataKey="total_seconds"
+                                            radius={[6, 6, 0, 0]}
+                                        />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+
+                        {/* Languages Card */}
+                        <Card className="group overflow-hidden border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 hover:border-indigo-500/50 transition-all duration-300 rounded-3xl hover:shadow-xl hover:shadow-indigo-500/5">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors">
+                                    Languages Usage
+                                </CardTitle>
+                                <CardDescription>
+                                    Coding time by language
+                                </CardDescription>
+                            </CardHeader>
+
+                            <CardContent className="h-65">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={stats.languages}>
+                                        <XAxis dataKey="name" hide />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="total_seconds"
+                                            strokeWidth={2}
+                                            fillOpacity={0.15}
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+
+                    </div>
+                ) : (
+                    <p className="text-slate-500">No stats available</p>
+                )}
+            </div>
         </div>
     );
 }

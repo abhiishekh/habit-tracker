@@ -4,7 +4,7 @@ import { Code2, Dumbbell, InfoIcon, LayoutDashboard, List, Menu, X } from 'lucid
 import { usePathname } from 'next/navigation'
 import React, { useState } from 'react'
 import clsx from 'clsx'
-import NavItem from '@/lib/navItems';
+import NavItem from '@/components/shared/navItems';
 import Link from 'next/link';
 
 const navItems = [
