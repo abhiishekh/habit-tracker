@@ -54,7 +54,10 @@ export function TodoItem({ id, task, reminderTime, category, status, completed }
       const res = await fetch(`/api/todos/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reminderTime: newDate.toISOString() }),
+        body: JSON.stringify({
+          reminderTime: newDate.toISOString(),
+          extraTime: minutes
+        }),
       });
       if (res.ok) {
         setCurrentTime(newDate);
@@ -100,8 +103,8 @@ export function TodoItem({ id, task, reminderTime, category, status, completed }
         <div
           onClick={toggleComplete}
           className={`h-7 w-7 rounded-full border-2 transition-all cursor-pointer flex items-center justify-center shrink-0 ${isCompleted
-              ? "bg-indigo-500 border-indigo-500"
-              : "border-slate-300 dark:border-zinc-700 group-hover:border-indigo-500 shadow-sm"
+            ? "bg-indigo-500 border-indigo-500"
+            : "border-slate-300 dark:border-zinc-700 group-hover:border-indigo-500 shadow-sm"
             }`}>
           {loading ? (
             <Loader2 size={12} className="animate-spin text-white" />

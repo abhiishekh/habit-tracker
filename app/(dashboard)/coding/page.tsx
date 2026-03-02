@@ -179,7 +179,7 @@ export default function CodingPage() {
                                         <YAxis />
                                         <Tooltip formatter={(v: number | undefined) => v !== undefined ? `${v} min` : ''} />
 
-                                        {stats.projects.map((p: any, i: number) => (
+                                        {stats?.projects?.map((p: any, i: number) => (
                                             <Area
                                                 key={p.name}
                                                 type="monotone"
@@ -210,7 +210,7 @@ export default function CodingPage() {
                                         <YAxis />
                                         <Tooltip formatter={(v: number | undefined) => v !== undefined ? `${v} min` : ''} />
 
-                                        {stats.languages.map((p: any, i: number) => (
+                                        {stats?.languages?.map((p: any, i: number) => (
                                             <Area
                                                 key={p.name}
                                                 type="monotone"

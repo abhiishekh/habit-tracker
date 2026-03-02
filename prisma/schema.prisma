@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,8 +8,8 @@ datasource db {
 }
 
 model Waitlist {
-  id    String  @id @default(auto()) @map("_id") @db.ObjectId
-  email String  @unique
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  email String @unique
 }
 
 model Account {
@@ -52,6 +51,7 @@ model User {
   habits        Habit[]
   tasks         Task[]
   todos         Todo[]
+  wakaTimeStats WakaTime[]
 }
 
 model Habit {
@@ -64,7 +64,7 @@ model Habit {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs HabitLog[]
 }
 
@@ -83,7 +83,7 @@ model Task {
   userId      String   @db.ObjectId
   title       String
   description String?
-  category    String?  // Code, Fitness, Freelance, Growth, etc.
+  category    String? // Code, Fitness, Freelance, Growth, etc.
   startDate   DateTime
   endDate     DateTime
   status      String   @default("pending") // pending, in-progress, completed
@@ -94,14 +94,33 @@ model Task {
 }
 
 model Todo {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String   @db.ObjectId
-  task          String
-  category      String?
-  reminderTime  DateTime?
-  completed     Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String    @db.ObjectId
+  task             String
+  category         String?
+  reminderTime     DateTime?
+  extraTime        Int?
+  whatsappNotified Boolean   @default(false)
+  completed        Boolean   @default(false)
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model WakaTime {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  date       DateTime
+  totalTime  String
+  projects   Json
+  languages  Json
+  categories Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
 }
