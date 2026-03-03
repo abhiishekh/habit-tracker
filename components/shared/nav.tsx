@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { LogIn, LogOut, User as UserIcon } from 'lucide-react'
+import { LogIn, LogOut, User as UserIcon, Settings, Phone, LayoutDashboard, Shield } from 'lucide-react'
 import { AuthModal } from '../auth/auth-modal'
 import {
     DropdownMenu,
@@ -51,15 +51,39 @@ const Nav = () => {
                                         <div className="flex flex-col space-y-1">
                                             <p className="text-sm font-medium leading-none text-slate-900 dark:text-white">{session?.user?.name}</p>
                                             <p className="text-xs leading-none text-slate-500 dark:text-slate-400">{session?.user?.email}</p>
+                                            {session?.user?.phone && (
+                                                <p className="text-[10px] leading-none text-indigo-500 font-medium pt-0.5">{session.user.phone}</p>
+                                            )}
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem>
                                         <Link
                                             href="/dashboard"
-                                            className={`hover:text-indigo-500 transition-colors ${pathname === '/dashboard' ? 'text-indigo-500' : ''}`}
+                                            className={`flex items-center w-full hover:text-indigo-500 transition-colors ${pathname === '/dashboard' ? 'text-indigo-500' : ''}`}
                                         >
-                                            Dashboard
+                                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                                            <span>Dashboard</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    {session?.user?.email === "abhisheaurya@gmail.com" && (
+                                        <DropdownMenuItem>
+                                            <Link
+                                                href="/admin"
+                                                className={`flex items-center w-full hover:text-indigo-500 transition-colors ${pathname === '/admin' ? 'text-indigo-500' : ''}`}
+                                            >
+                                                <Shield className="mr-2 h-4 w-4" />
+                                                <span>Admin Panel</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem>
+                                        <Link
+                                            href="/settings"
+                                            className={`flex items-center w-full hover:text-indigo-500 transition-colors ${pathname === '/settings' ? 'text-indigo-500' : ''}`}
+                                        >
+                                            <Settings className="mr-2 h-4 w-4" />
+                                            <span>Profile Settings</span>
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })} className="text-red-600 dark:text-red-400 cursor-pointer">

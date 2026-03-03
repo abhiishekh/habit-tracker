@@ -29,8 +29,11 @@ export const authOptions: NextAuthOptions = {
     callbacks: {
         session: async ({ session, user }) => {
             if (session.user) {
-                // @ts-ignore
                 session.user.id = user.id;
+                session.user.phone = user.phone;
+                session.user.whatsappEnabled = user.whatsappEnabled;
+                session.user.wakatimeApiKey = user.wakatimeApiKey;
+                session.user.githubApiKey = user.githubApiKey;
             }
             return session;
         },

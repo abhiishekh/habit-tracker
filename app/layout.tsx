@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Link from "next/link";
 import Nav from "@/components/shared/nav";
 import DashboardFooter from "@/components/shared/dhasboard-footer";
+import { Toaster } from "sonner";
 
 const myCustomFont = localFont({
   src: [
@@ -52,6 +53,7 @@ export default function RootLayout({
               <main className="container mx-auto pt-8 ">
 
                 {children}
+                <Toaster richColors position="bottom-right" />
               </main>
 
               <DashboardFooter />

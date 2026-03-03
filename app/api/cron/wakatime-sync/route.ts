@@ -26,9 +26,15 @@ export async function GET(request: Request) {
         today.setHours(0, 0, 0, 0);
 
         for (const user of users) {
+            if (!user.wakatimeApiKey) {
+                console.log(`Skipping sync for ${user.email}: No WakaTime API key set.`);
+                results.push({ email: user.email, userId: user.id, success: false, error: "API Key Not Set" });
+                continue;
+            }
+
             console.log(`Syncing stats for user: ${user.email}`);
             try {
-                const stats = await fetchTodayStats();
+                const stats = await fetchTodayStats(user.wakatimeApiKey);
 
                 if (stats && typeof stats !== "string") {
                     console.log(`Successfully fetched stats for ${user.email}. Total time: ${stats.totalTime}`);

@@ -40,18 +40,22 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  name            String?
+  email           String?    @unique
+  phone           String? // Store in E.164 format (e.g., "+919876543210")
+  whatsappEnabled Boolean    @default(false)
+  emailVerified   DateTime?
+  image           String?
+  wakatimeApiKey  String?
+  githubApiKey    String?
+  accounts        Account[]
+  sessions        Session[]
   // Add your app-specific fields here
-  habits        Habit[]
-  tasks         Task[]
-  todos         Todo[]
-  wakaTimeStats WakaTime[]
+  habits          Habit[]
+  tasks           Task[]
+  todos           Todo[]
+  wakaTimeStats   WakaTime[]
 }
 
 model Habit {
@@ -123,4 +127,11 @@ model WakaTime {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
+}
+
+model SystemConfig {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
 }

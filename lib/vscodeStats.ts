@@ -1,5 +1,4 @@
-export async function fetchTodayStats() {
-    const apiKey = process.env.WAKATIME_API
+export async function fetchTodayStats(apiKey?: string) {
     if (!apiKey) {
         return "API Key Missing"
     }
