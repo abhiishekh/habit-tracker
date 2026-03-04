@@ -171,7 +171,7 @@ export default function CodingPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* 2. Main Assets / Repositories Section */}
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-3">
                         <section>
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Main Assets</h2>

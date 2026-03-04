@@ -1,7 +1,9 @@
 "use client"
 import { AddTodoModal } from "@/features/todos/add-todo-modal";
 import { TodoItem } from "@/features/todos/todo-item";
-import { Plus, Loader2, ClipboardList, Smartphone, Send } from "lucide-react";
+import { Plus, Loader2, ClipboardList, Smartphone, Send, Sparkles } from "lucide-react";
+import { AiGoalAssistant } from "@/features/ai-goals/ai-goal-assistant";
+
 import { useState, useEffect } from "react";
 import { toggleWhatsapp, sendTestWhatsapp } from "@/app/action";
 import { toast } from "sonner";
@@ -10,7 +12,9 @@ import { useSession } from "next-auth/react";
 export default function TodosPage() {
     const { data: session } = useSession();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false);
     const [tasks, setTasks] = useState<any[]>([]);
+
     const [loading, setLoading] = useState(true);
     const [isWhatsappEnabled, setIsWhatsappEnabled] = useState(false);
     const [toggleLoading, setToggleLoading] = useState(false);
@@ -85,6 +89,14 @@ export default function TodosPage() {
                         <span className="hidden sm:inline font-medium text-sm">Test WA</span>
                     </button>
                     <button
+                        onClick={() => setIsAiModalOpen(true)}
+                        title="Open AI Goal Strategist"
+                        className="h-12 px-4 rounded-2xl bg-indigo-600 dark:bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 active:scale-95 group"
+                    >
+                        <Sparkles size={18} className="sm:mr-2 group-hover:rotate-12 transition-transform" />
+                        <span className="hidden sm:inline font-bold text-sm">AI Coach</span>
+                    </button>
+                    <button
                         onClick={handleToggleWhatsapp}
                         disabled={toggleLoading}
                         title={isWhatsappEnabled ? "Disable WhatsApp" : "Enable WhatsApp"}
@@ -142,6 +154,14 @@ export default function TodosPage() {
                 isOpen={isModalOpen}
                 onClose={() => {
                     setIsModalOpen(false);
+                    fetchTasks(); // Refresh list after closing
+                }}
+            />
+
+            <AiGoalAssistant
+                isOpen={isAiModalOpen}
+                onClose={() => {
+                    setIsAiModalOpen(false);
                     fetchTasks(); // Refresh list after closing
                 }}
             />
