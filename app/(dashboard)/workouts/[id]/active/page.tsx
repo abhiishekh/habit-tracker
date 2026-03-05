@@ -41,8 +41,9 @@ export default function ActiveWorkout() {
             try {
                 const response = await fetch(`/api/workout-plans/${planId}`)
                 const data = await response.json()
+                console.log("data is ", data)
                 if (data.success) {
-                    const foundWorkout = data.plan.workouts.find((w: any) => w.id === workoutId)
+                    const foundWorkout = data.workouts.find((w: any) => w.id === workoutId)
                     setWorkout(foundWorkout)
                 }
             } catch (error) {
@@ -183,7 +184,7 @@ export default function ActiveWorkout() {
                                     <p>No visualization available</p>
                                 </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                            <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
                             <div className="absolute bottom-6 left-6 right-6">
                                 <h1 className="text-3xl font-black text-white uppercase italic tracking-tighter">
                                     {currentExercise.name}

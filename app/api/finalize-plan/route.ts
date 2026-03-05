@@ -48,7 +48,15 @@ export async function POST(req: NextRequest) {
             "dayOfWeek": "string",
             "focus": "string",
             "exercises": [
-              { "name": "string", "sets": number, "reps": number, "weight": number, "gifUrl": "string", "notes": "string" }
+              { 
+            "exerciseId": "string",
+            "name": "string", 
+            "sets": number, 
+            "reps": number, 
+            "weight": number, 
+            "gifUrl": "string", 
+            "notes": "string" 
+            }
             ]
           }
         ]

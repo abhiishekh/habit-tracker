@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { getPermanentGifUrl } from '@/lib/utils/getPermanentGifUrl';
 
 export async function GET(
     req: NextRequest,
@@ -34,7 +35,19 @@ export async function GET(
             return NextResponse.json({ error: "Plan not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, plan });
+        const workoutsWithGif = plan.workouts.map((workout) => ({
+            ...workout,
+            exercises: workout.exercises.map((exercise) => ({
+                ...exercise,
+                gifUrl: getPermanentGifUrl(exercise.exerciseId),
+            })),
+        }));
+
+        return NextResponse.json({
+            success: true,
+            ...plan,
+            workouts: workoutsWithGif,
+        });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

@@ -36,7 +36,7 @@ export default function WorkoutDetail() {
                 const response = await fetch(`/api/workout-plans/${id}`)
                 const data = await response.json()
                 if (data.success) {
-                    setPlan(data.plan)
+                    setPlan(data)
                 }
             } catch (error) {
                 console.error("Failed to fetch plan:", error)
@@ -123,7 +123,7 @@ export default function WorkoutDetail() {
                             transition={{ delay: index * 0.05 }}
                         >
                             <Card className={`relative overflow-hidden transition-all duration-300 ${isToday
-                                    ? "border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/5 bg-primary/[0.02]"
+                                    ? "border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/5 bg-primary/2"
                                     : "hover:border-primary/30"
                                 } ${isCompleted ? "opacity-75" : ""}`}>
                                 <CardContent className="p-0">
