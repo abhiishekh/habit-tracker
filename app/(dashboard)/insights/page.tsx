@@ -4,42 +4,42 @@ import { useEffect, useState } from "react";
 import { Brain, TrendingUp, Target, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { getInsightsData } from "@/app/actions/insights";
 
-const COLORS = ['#6366f1', '#f97316', '#3b82f6', '#10b981'];
+const COLORS = ['#6366f1', '#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899'];
 
 export default function InsightsPage() {
     const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<any>(null);
 
     useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 800);
-        return () => clearTimeout(timer);
+        async function loadData() {
+            try {
+                const insights = await getInsightsData();
+                setData(insights);
+            } catch (error) {
+                console.error("Failed to load insights:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadData();
     }, []);
-
-    const focusData = [
-        { name: 'Code', value: 45 },
-        { name: 'Fitness', value: 25 },
-        { name: 'Growth', value: 20 },
-        { name: 'Freelance', value: 10 },
-    ];
-
-    const timelineData = [
-        { day: 'Day 1', score: 40 },
-        { day: 'Day 5', score: 55 },
-        { day: 'Day 10', score: 45 },
-        { day: 'Day 15', score: 70 },
-        { day: 'Day 20', score: 85 },
-        { day: 'Day 25', score: 75 },
-        { day: 'Day 30', score: 90 },
-    ];
 
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 px-6 gap-4 text-indigo-500">
                 <Loader2 size={40} className="animate-spin" />
-                <p className="font-medium">Crunching your 90-day data...</p>
+                <p className="font-medium">Crunching your data...</p>
             </div>
         );
     }
+
+    const { focusData, timelineData, boomingArea } = data || {
+        focusData: [],
+        timelineData: [],
+        boomingArea: "Growth"
+    };
 
     return (
         <div className="max-w-6xl mx-auto pb-20 px-6 sm:px-0">
@@ -50,10 +50,10 @@ export default function InsightsPage() {
                         <span className="text-sm font-bold uppercase tracking-widest text-indigo-500">AI Analysis</span>
                     </div>
                     <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Growth Insights</h1>
-                    <p className="text-slate-500 text-lg mt-1">Deep analysis of your 90-day transformation.</p>
+                    <p className="text-slate-500 text-lg mt-1">Deep analysis of your current progress.</p>
                 </div>
                 <div className="px-4 py-2 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
-                    Day 32 / 90
+                    Booming: {boomingArea}
                 </div>
             </div>
 
@@ -66,7 +66,7 @@ export default function InsightsPage() {
                                 <Brain className="text-indigo-500" />
                                 Focus Distribution
                             </CardTitle>
-                            <CardDescription>Where your energy spent this month.</CardDescription>
+                            <CardDescription>Where your energy spent recently.</CardDescription>
                         </CardHeader>
                         <CardContent className="h-75 w-full mt-4">
                             <ResponsiveContainer width="100%" height="100%">
@@ -75,13 +75,13 @@ export default function InsightsPage() {
                                         data={focusData}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={100}
+                                        innerRadius="60%"
+                                        outerRadius="80%"
                                         paddingAngle={8}
                                         dataKey="value"
                                         cornerRadius={8}
                                     >
-                                        {focusData.map((entry, index) => (
+                                        {focusData.map((_entry: any, index: number) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                         ))}
                                     </Pie>
@@ -92,7 +92,7 @@ export default function InsightsPage() {
                                 </PieChart>
                             </ResponsiveContainer>
                             <div className="flex justify-center flex-wrap gap-6 mt-4">
-                                {focusData.map((entry, index) => (
+                                {focusData.map((entry: any, index: number) => (
                                     <div key={entry.name} className="flex items-center gap-2">
                                         <div className="h-3 w-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                                         <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{entry.name}</span>
@@ -108,7 +108,7 @@ export default function InsightsPage() {
                                 <TrendingUp className="text-emerald-500" />
                                 Efficiency Tracker
                             </CardTitle>
-                            <CardDescription>Overall productivity score over the challenge.</CardDescription>
+                            <CardDescription>Productivity score based on completions.</CardDescription>
                         </CardHeader>
                         <CardContent className="h-[250px] w-full mt-4">
                             <ResponsiveContainer width="100%" height="100%">
@@ -138,10 +138,10 @@ export default function InsightsPage() {
                         <Target className="mb-4" size={32} />
                         <h3 className="text-xl font-bold mb-2">Next Target</h3>
                         <p className="text-indigo-100 text-sm leading-relaxed mb-6">
-                            Based on your frequency, you're 12% behind in your Fitness category. Prioritize Leg Day tomorrow to stay on track.
+                            Your "{boomingArea}" area is currently leading. Focus on maintainig this momentum while balancing other categories.
                         </p>
                         <button className="w-full py-3 rounded-xl bg-white text-indigo-600 font-bold hover:bg-indigo-50 transition-all text-sm">
-                            Adjust My Schedule
+                            Optimize Schedule
                         </button>
                     </div>
 
@@ -152,9 +152,9 @@ export default function InsightsPage() {
                                     <AlertCircle className="text-rose-600 dark:text-rose-400" size={20} />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-rose-900 dark:text-rose-100 mb-1">Focus Drain Alert</h4>
+                                    <h4 className="font-bold text-rose-900 dark:text-rose-100 mb-1">Activity Alert</h4>
                                     <p className="text-sm text-rose-700 dark:text-rose-400 leading-relaxed">
-                                        You've missed 3 consecutive "Freelance" todos this week. Re-evaluate if this category is still a priority.
+                                        Ensure all your GitHub and WakaTime keys are set in settings to include them in the analysis.
                                     </p>
                                 </div>
                             </div>

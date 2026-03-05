@@ -11,19 +11,18 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { goal, currentSituation, timeline } = body;
-
-    // Construct a comprehensive prompt for the Gemini agent
-    const deepContext = `
-      GOAL: ${goal}
-      CURRENT STATUS: ${currentSituation}
-      TIMELINE: ${timeline} days.
-    `;
+    const { goal, currentSituation, timeline, height, weight, experience, refinement } = body;
 
     // Trigger your agent army
-    const result = await runLifeArchitect(session.user.id, deepContext);
+    const result = await runLifeArchitect(session.user.id, goal, {
+      height: Number(height),
+      weight: Number(weight),
+      experience,
+      refinement
+    });
 
     return NextResponse.json({ success: true, plan: result });
+
   } catch (error: any) {
     console.error("AI Generation Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

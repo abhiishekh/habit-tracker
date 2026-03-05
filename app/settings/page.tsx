@@ -1,11 +1,12 @@
 "use client";
 
-import { Smartphone, User, Bell, Shield, Trash2, Save, Send, Github, Code2, ExternalLink } from 'lucide-react';
+import { Smartphone, User, Bell, Shield, Trash2, Save, Send, Github, Code2, ExternalLink, InfoIcon } from 'lucide-react';
 import PhoneVerification from '@/components/PhoneVerification';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { updateUserProfile, sendTestWhatsapp, toggleWhatsapp, saveUserApiKeys } from '@/app/action';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -15,6 +16,8 @@ export default function SettingsPage() {
   const [testLoading, setTestLoading] = useState(false);
   const [wakatimeKey, setWakatimeKey] = useState('');
   const [githubKey, setGithubKey] = useState('');
+  const [linkedinKey, setLinkedinKey] = useState('');
+  const [twitterKey, setTwitterKey] = useState('');
   const [integrationsLoading, setIntegrationsLoading] = useState(false);
 
   useEffect(() => {
@@ -23,6 +26,8 @@ export default function SettingsPage() {
       setEmail(session.user.email || '');
       setWakatimeKey(session.user.wakatimeApiKey || '');
       setGithubKey(session.user.githubApiKey || '');
+      setLinkedinKey((session.user as any).linkedinApiKey || '');
+      setTwitterKey((session.user as any).twitterApiKey || '');
     }
   }, [session]);
 
@@ -32,11 +37,15 @@ export default function SettingsPage() {
     try {
       await saveUserApiKeys({
         wakatimeApiKey: wakatimeKey,
-        githubApiKey: githubKey
+        githubApiKey: githubKey,
+        linkedinApiKey: linkedinKey,
+        twitterApiKey: twitterKey,
       });
       await update({
         wakatimeApiKey: wakatimeKey,
-        githubApiKey: githubKey
+        githubApiKey: githubKey,
+        linkedinApiKey: linkedinKey,
+        twitterApiKey: twitterKey,
       });
       toast.success("Integrations updated successfully!");
     } catch (error) {
@@ -154,11 +163,20 @@ export default function SettingsPage() {
 
         {/* Integrations Section */}
         <section className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-              <Code2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                <Code2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">External Integrations</h2>
             </div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">External Integrations</h2>
+            <Link
+              href="/docs/api-keys-guide.md"
+              target="_blank"
+              className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold hover:underline bg-indigo-50 dark:bg-indigo-500/10 px-4 py-2 rounded-xl text-sm"
+            >
+              How to get API Keys? <ExternalLink size={14} />
+            </Link>
           </div>
 
           <form onSubmit={handleUpdateIntegrations} className="space-y-8">
@@ -216,9 +234,65 @@ export default function SettingsPage() {
                 placeholder="ghp_..."
               />
               <p className="text-[10px] text-slate-500">
-                Used to fetch your GitHub activity (commits, stars, etc.). Requires 'repo' and 'user' scopes.
+                Used to sync your GitHub activity. Your token is stored securely.
               </p>
             </div>
+
+            <div className="border-t border-slate-100 dark:border-zinc-800 pt-6"></div>
+
+            {/* LinkedIn */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ExternalLink className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">LinkedIn API Key</span>
+                </div>
+                <a
+                  href="https://www.linkedin.com/developers/apps"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-indigo-500 hover:text-indigo-600 flex items-center gap-1"
+                >
+                  Create App <ExternalLink size={10} />
+                </a>
+              </div>
+              <input
+                type="password"
+                value={linkedinKey}
+                onChange={(e) => setLinkedinKey(e.target.value)}
+                className="block w-full rounded-xl border-slate-200 dark:border-zinc-700 dark:bg-zinc-800 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 transition-all text-slate-900 dark:text-white"
+                placeholder="linkedin_..."
+              />
+            </div>
+
+            <div className="border-t border-slate-100 dark:border-zinc-800 pt-6"></div>
+
+            {/* Twitter */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ExternalLink className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Twitter API Key</span>
+                </div>
+                <a
+                  href="https://developer.twitter.com/en/portal/dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-indigo-500 hover:text-indigo-600 flex items-center gap-1"
+                >
+                  Developer Portal <ExternalLink size={10} />
+                </a>
+              </div>
+              <input
+                type="password"
+                value={twitterKey}
+                onChange={(e) => setTwitterKey(e.target.value)}
+                className="block w-full rounded-xl border-slate-200 dark:border-zinc-700 dark:bg-zinc-800 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2.5 transition-all text-slate-900 dark:text-white"
+                placeholder="twitter_..."
+              />
+            </div>
+
+            {/* Documentation Alert Moved to Top */}
 
             <div className="flex justify-end pt-4">
               <button

@@ -18,7 +18,12 @@ export async function saveUserPhone(phoneNumber: string) {
   });
 }
 
-export async function saveUserApiKeys(data: { wakatimeApiKey?: string; githubApiKey?: string }) {
+export async function saveUserApiKeys(data: {
+  wakatimeApiKey?: string;
+  githubApiKey?: string;
+  linkedinApiKey?: string;
+  twitterApiKey?: string;
+}) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) throw new Error("Unauthorized");
 
@@ -27,6 +32,8 @@ export async function saveUserApiKeys(data: { wakatimeApiKey?: string; githubApi
     data: {
       wakatimeApiKey: data.wakatimeApiKey,
       githubApiKey: data.githubApiKey,
+      linkedinApiKey: data.linkedinApiKey,
+      twitterApiKey: data.twitterApiKey,
     },
   });
 }

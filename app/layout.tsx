@@ -5,7 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Link from "next/link";
 import Nav from "@/components/shared/nav";
-import DashboardFooter from "@/components/shared/dhasboard-footer";
+import DashboardFooter from "@/components/shared/dashboard-footer";
 import { Toaster } from "sonner";
 
 const myCustomFont = localFont({
@@ -48,10 +48,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
-            <div className="min-h-screen bg-slate-50 dark:bg-[#09090B] transition-colors duration-300">
+            <div className="flex flex-col min-h-screen bg-white dark:bg-[#09090B] transition-colors duration-300">
               <Nav />
-              <main className="container mx-auto pt-8 ">
-
+              <main className="flex-1 w-full">
                 {children}
                 <Toaster richColors position="bottom-right" />
               </main>

@@ -89,13 +89,14 @@ export default function TodosPage() {
                         <span className="hidden sm:inline font-medium text-sm">Test WA</span>
                     </button>
                     <button
-                        onClick={() => setIsAiModalOpen(true)}
-                        title="Open AI Goal Strategist"
+                        onClick={() => window.location.href = '/blueprint/new'}
+                        title="Open Gym Trainer AI"
                         className="h-12 px-4 rounded-2xl bg-indigo-600 dark:bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 active:scale-95 group"
                     >
                         <Sparkles size={18} className="sm:mr-2 group-hover:rotate-12 transition-transform" />
-                        <span className="hidden sm:inline font-bold text-sm">AI Coach</span>
+                        <span className="hidden sm:inline font-bold text-sm">Gym Trainer</span>
                     </button>
+
                     <button
                         onClick={handleToggleWhatsapp}
                         disabled={toggleLoading}

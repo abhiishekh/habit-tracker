@@ -1,6 +1,6 @@
 "use client"
 
-import { Code2, Dumbbell, InfoIcon, LayoutDashboard, List, Menu, X } from 'lucide-react';
+import { Code2, Dumbbell, Flame, InfoIcon, LayoutDashboard, List, Menu, Sparkles, X } from 'lucide-react';
 import { usePathname } from 'next/navigation'
 import React, { useState } from 'react'
 import clsx from 'clsx'
@@ -9,7 +9,8 @@ import Link from 'next/link';
 
 const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Habits", href: "/habits", icon: Dumbbell },
+    { name: "Workouts", href: "/workouts", icon: Dumbbell },
+    { name: "Habits", href: "/habits", icon: Flame },
     { name: "Todos", href: "/todos", icon: List },
     { name: "Insights", href: "/insights", icon: InfoIcon },
     { name: "Coding & Work", href: "/coding", icon: Code2 },
@@ -21,22 +22,12 @@ const DashboardSidebar = () => {
 
     return (
         <aside className={clsx(
-            "fixed left-0 top-0 z-40 h-full border-r border-slate-200 bg-white transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-950 flex flex-col",
+            "fixed left-0 top-16 z-40 h-[calc(100vh-64px)] border-r border-slate-200 bg-white transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-950 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar",
             // Mobile width vs Desktop width
             isExpanded ? "w-64 px-4 py-6" : "w-16 px-2 py-6 md:w-64 md:px-4"
         )}>
 
-            {/* 1. UFL Logo - Locked at the very top, always visible */}
-            <div className="flex items-center px-2 h-8">
-                <div className="text-xl font-bold tracking-tighter text-slate-900 dark:text-white">
-                    <Link href="/" className={clsx(
-                        "flex items-center gap-1",
-                        isExpanded ? "justify-start" : "justify-center"
-                    )}>
-                        UFL<span className="text-indigo-500">.</span>
-                    </Link>
-                </div>
-            </div>
+
 
             {/* 2. Mobile Toggle Button - Pushed down */}
             <div className={clsx(

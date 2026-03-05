@@ -49,6 +49,8 @@ model User {
   image           String?
   wakatimeApiKey  String?
   githubApiKey    String?
+  linkedinApiKey  String?
+  twitterApiKey   String?
   accounts        Account[]
   sessions        Session[]
   // Add your app-specific fields here
@@ -56,6 +58,12 @@ model User {
   tasks           Task[]
   todos           Todo[]
   wakaTimeStats   WakaTime[]
+  workoutPlans    WorkoutPlan[]
+
+  height      Float?
+  weight      Float?
+  fitnessGoal String? // "Bulking", "Cutting", "Strength"
+  experience  String? // "Beginner", "Intermediate"
 }
 
 model Habit {
@@ -134,4 +142,48 @@ model SystemConfig {
   key       String   @unique
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model WorkoutPlan {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  goal       String // e.g., "Full Body Hypertrophy"
+  weekNumber Int // To track Week 1, Week 2, etc.
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  workouts Workout[]
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workout {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  planId      String    @db.ObjectId
+  dayOfWeek   String // "Monday"
+  focus       String // "Chest + Triceps"
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+
+  exercises   WorkoutExercise[]
+  workoutPlan WorkoutPlan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model WorkoutExercise {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  workoutId   String   @db.ObjectId
+  exerciseId   String
+  name        String   // e.g., "Bench Press"
+  sets        Int
+  reps        Int
+  weight      Float?   // The weight assigned by the AI
+  gifUrl      String?  // From ExerciseDB
+  notes       String?  // Form tips from the Researcher Agent
+  completedSets Int    @default(0)
+  
+  workout     Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
 }

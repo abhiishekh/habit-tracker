@@ -26,7 +26,7 @@ const Nav = () => {
 
     return (
         <>
-            <nav className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
+            <nav className="fixed top-0 z-50 w-full border-b border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
                 <div className="container mx-auto flex h-16 items-center justify-between px-6">
                     <Link href="/" className="text-xl font-bold tracking-tighter text-slate-900 dark:text-white">
                         UFL<span className="text-indigo-500">.</span>

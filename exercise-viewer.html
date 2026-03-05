@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Exercise Viewer</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        img {
+            width: 100%;
+            border-radius: 6px;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .meta {
+            color: #666;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        ul {
+            margin-top: 10px;
+            padding-left: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Exercise Database</h1>
+
+    <div class="container" id="exerciseContainer"></div>
+
+    <script>
+        async function loadExercises() {
+            const response = await fetch("http://localhost:5000/exercises");
+            const exercises = await response.json();
+
+            const container = document.getElementById("exerciseContainer");
+
+            exercises.forEach(ex => {
+                const card = document.createElement("div");
+                card.className = "card";
+
+                card.innerHTML = `
+      <img src="${ex.gifUrl}" alt="${ex.name}">
+      <div class="title">${ex.name}</div>
+      <div class="meta">Body Part: ${ex.bodyPart}</div>
+      <div class="meta">Target: ${ex.target}</div>
+      <div class="meta">Equipment: ${ex.equipment}</div>
+      <div class="meta">Difficulty: ${ex.difficulty || "N/A"}</div>
+      <ul>
+        ${(ex.instructions || []).slice(0, 3).map(i => `<li>${i}</li>`).join("")}
+      </ul>
+    `;
+
+                container.appendChild(card);
+            });
+        }
+
+        loadExercises();
+    </script>
+
+</body>
+
+</html>

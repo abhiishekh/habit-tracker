@@ -1,7 +1,16 @@
 // middleware.ts
 export { default } from "next-auth/middleware";
 
-export const config = { 
+export const config = {
   // List all routes that require login here
-  matcher: ["/todos/:path*", "/habits/:path*", "/dashboard/:path*", "/stats/:path*"] 
+  matcher: [
+    "/dashboard/:path*",
+    "/todos/:path*",
+    "/habits/:path*",
+    "/workouts/:path*",
+    "/insights/:path*",
+    "/coding/:path*",
+    "/settings/:path*",
+    "/tasks/:path*"
+  ]
 };

@@ -1,11 +1,13 @@
+import { BlueprintForm } from '@/components/blueprint/BlueprintForm'
 import React from 'react'
 
-const page = () => {
+const BlueprintNewPage = () => {
   return (
-    <div>
-      NEw page
+    <div className="py-10">
+      <BlueprintForm />
     </div>
   )
 }
 
-export default page
+export default BlueprintNewPage
+
