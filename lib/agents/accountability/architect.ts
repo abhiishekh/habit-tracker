@@ -2,14 +2,14 @@
 
 import { HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import { checkTodaysTasksTool, markTaskCompleteTool, replanIfNeededTool, saveUserReactionTool } from "./tools";
-import { geminiModel } from "@/lib/gemini";
+import { model } from "@/lib/gemini";
 
 export async function runAccountabilityAgent(
   userId: string,
   userFeedback?: string  // "tasks were too hard" / "completed everything" / "skipped gym"
 ) {
   const tools = [checkTodaysTasksTool(userId), markTaskCompleteTool, saveUserReactionTool, replanIfNeededTool(userId)];
-  const modelWithTools = geminiModel.bindTools(tools);
+  const modelWithTools = model.bindTools(tools);
 
   const systemPrompt = `You are a Supportive Accountability Coach.
 Current Date: ${new Date().toLocaleDateString()}

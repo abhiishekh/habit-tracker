@@ -15,7 +15,7 @@ export default function DashboardLayout({
       {/* md:pl-64 pushes content over for the full desktop sidebar */}
       {/* pt-20 clears the fixed top header (16) + adds a 4 unit gap */}
       <main className="flex-1 flex flex-col pt-20 pl-16 md:pl-64 transition-all duration-300">
-        <div className="pl-6 md:p-10 flex-1">
+        <div className="px-2 md:p-10 flex-1">
           {children}
         </div>
       </main>

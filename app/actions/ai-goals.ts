@@ -1,6 +1,6 @@
 "use server"
 
-import { geminiModel } from "@/lib/gemini";
+import { model } from "@/lib/gemini";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -28,7 +28,7 @@ export async function generateGoalTasks(goal: string, situation: string, timelin
   `;
 
     try {
-        const response = await geminiModel.invoke(prompt);
+        const response = await model.invoke(prompt);
         const content = typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
 
         // Handle potential markdown code blocks in Gemini's response

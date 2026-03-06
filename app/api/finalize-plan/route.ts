@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { geminiModel } from '@/lib/gemini';
+import { model } from '@/lib/gemini';
 import { z } from 'zod';
 
 const extractSchema = z.object({
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     `;
 
 
-        const response = await geminiModel.invoke(prompt);
+        const response = await model.invoke(prompt);
         let text = typeof response.content === 'string' ? response.content : "";
 
         // Improved JSON cleaning: find the first { and the last }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Loader2, Sparkles, Activity } from "lucide-react";
 import { AddHabitModal } from "@/features/habits/add-habit-modal";
+import { Button } from "@/components/ui/button";
 
 export default function HabitsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,8 +30,8 @@ export default function HabitsPage() {
 
   return (
     <div className="max-w-5xl mx-auto pb-20 px-6">
-      <div className="flex justify-between items-end mb-12">
-        <div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
+        <div className="">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="text-indigo-500" size={18} />
             <span className="text-sm font-bold uppercase tracking-widest text-indigo-500">Atomic Habits</span>
@@ -38,13 +39,13 @@ export default function HabitsPage() {
           <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Daily Rituals</h1>
           <p className="text-slate-500 text-lg mt-1">Small wins lead to massive transformations.</p>
         </div>
-        <button
+        <Button
           onClick={() => setIsModalOpen(true)}
-          className="h-14 px-6 rounded-2xl bg-indigo-600 text-white flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-95 font-bold"
+          className="h-14 w-full md:w-auto px-6 rounded-2xl bg-indigo-600 text-white flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-95 font-bold"
         >
           <Plus size={20} />
           <span>New Ritual</span>
-        </button>
+        </Button>
       </div>
 
       {loading ? (

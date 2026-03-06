@@ -1,9 +1,9 @@
 // src/app/api/waitlist/route.ts
 
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     console.log("Received request to join waitlist in route.ts");
     const { email } = await req.json();

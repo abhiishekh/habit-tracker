@@ -2,7 +2,7 @@
 
 import { HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import { analyzeProjectTool, saveProjectTimelineTool } from "./tools";
-import { geminiModel } from "@/lib/gemini";
+import { model } from "@/lib/gemini";
 
 export async function runProjectArchitect(
   userId: string,
@@ -10,7 +10,7 @@ export async function runProjectArchitect(
   context?: { techStack?: string; experience?: string; hoursPerDay?: number }
 ) {
   const tools = [analyzeProjectTool, saveProjectTimelineTool(userId)];
-  const modelWithTools = geminiModel.bindTools(tools);
+  const modelWithTools = model.bindTools(tools);
 
   const systemPrompt = `You are a Senior Software Architect and Project Manager.
 Project Description: ${projectDescription}

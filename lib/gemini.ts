@@ -1,10 +1,43 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatOpenAI } from "@langchain/openai";
 
-// Centralized Gemini model configuration
-export const geminiModel = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash",
+// ==========================================
+// CENTRALIZED LLM CONFIGURATION
+// Options: "groq" | "gemini" | "grok"
+const ACTIVE_PROVIDER: string = "groq";
+// ==========================================
 
-
+// Gemini (Free tier available)
+const geminiModel = new ChatGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
-  temperature: 0.7, // Slightly creative for fitness planning
+  model: "gemini-2.0-flash",
+  temperature: 0.7,
 });
+
+// xAI Grok (Paid)
+const grokModel = new ChatOpenAI({
+  apiKey: process.env.GROK_API_KEY || "",
+  configuration: {
+    baseURL: "https://api.x.ai/v1",
+  },
+  modelName: "grok-2-latest",
+  temperature: 0.7,
+});
+
+// Groq (Fast + free tier)
+const groqModel = new ChatOpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  configuration: {
+    baseURL: "https://api.groq.com/openai/v1",
+  },
+  modelName: "llama-3.3-70b-versatile",
+  temperature: 0.7,
+});
+
+// Export unified model
+export const model =
+  ACTIVE_PROVIDER === "groq"
+    ? groqModel
+    : ACTIVE_PROVIDER === "grok"
+      ? grokModel
+      : geminiModel;
