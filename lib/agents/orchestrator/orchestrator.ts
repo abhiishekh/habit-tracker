@@ -7,7 +7,7 @@ import { runLifeArchitect } from "../gym/architect";
 import { runIncomeArchitect } from "../income/architect";
 import { runCareerArchitect } from "../career/architect";
 import { runProjectArchitect } from "../project/architect";
-import { geminiModel } from "@/lib/gemini";
+import { model } from "@/lib/gemini";
 
 export type OrchestratorResult = {
   domain: "gym" | "income" | "career" | "project" | "unknown";
@@ -21,7 +21,7 @@ export async function runOrchestrator(
 ): Promise<OrchestratorResult> {
 
   const tools = [classifyGoalTool, saveUserProfileTool, getUserProfileTool];
-  const modelWithTools = geminiModel.bindTools(tools);
+  const modelWithTools = model.bindTools(tools);
 
   const systemPrompt = `You are a Life Architect Orchestrator. Your ONLY job is to:
 1. Call 'get_user_profile' to check existing user context

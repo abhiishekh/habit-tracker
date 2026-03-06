@@ -41,6 +41,7 @@ const networkingData = [
 ]
 
 import TaskForm from '@/components/tasks/task-form'
+import { ActiveBlueprintsWidget } from '@/components/dashboard/ActiveBlueprintsWidget'
 
 const Dashboard = () => {
     return (
@@ -110,6 +111,11 @@ const Dashboard = () => {
                         <span className="text-sm text-green-500 font-medium">This week</span>
                     </div>
                 </div>
+            </div>
+
+            {/* AI Blueprints Section */}
+            <div className="grid grid-cols-1 gap-6">
+                <ActiveBlueprintsWidget />
             </div>
 
             {/* Charts Grid */}

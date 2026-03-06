@@ -3,7 +3,7 @@
 
 import { HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import { researchJobMarketTool, saveCareerPlanTool } from "./tools";
-import { geminiModel } from "@/lib/gemini";
+import { model } from "@/lib/gemini";
 
 export async function runCareerArchitect(
   userId: string,
@@ -18,7 +18,7 @@ export async function runCareerArchitect(
   }
 ) {
   const tools = [researchJobMarketTool, saveCareerPlanTool(userId)];
-  const modelWithTools = geminiModel.bindTools(tools);
+  const modelWithTools = model.bindTools(tools);
 
   const systemPrompt = `You are a Senior Career Coach and HR Strategist with 15+ years of experience.
 User Goal: ${userGoal}

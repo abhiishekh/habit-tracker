@@ -1,4 +1,4 @@
-import { geminiModel } from "../gemini";
+import { model } from "../gemini";
 import { createWeeklyWorkoutTool, exerciseResearcherTool } from "./gym/tools";
 import { prisma } from "@/lib/prisma";
 import { DynamicStructuredTool } from "@langchain/core/tools";
@@ -8,7 +8,7 @@ import { HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messag
 export async function runLifeArchitect(userId: string, userGoal: string, context: { weight: number, height: number, experience: string, refinement?: string }) {
   const writingTool = createWeeklyWorkoutTool(userId);
   const tools = [exerciseResearcherTool, writingTool];
-  const modelWithTools = geminiModel.bindTools(tools);
+  const modelWithTools = model.bindTools(tools);
 
   const missionPrompt = `You are a Senior Gym Trainer and Exercise Scientist. 
     User Context: Weight ${context.weight}kg, Height ${context.height}cm, Level: ${context.experience}.

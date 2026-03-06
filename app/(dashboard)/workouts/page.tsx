@@ -49,7 +49,7 @@ export default function WorkoutHub() {
                         Manage your AI-architected training routines.
                     </p>
                 </div>
-                <Link href="/blueprint/new">
+                <Link href="/blueprint/gym/new">
                     <Button className="rounded-full px-6 shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300">
                         <Sparkles className="w-4 h-4 mr-2" />
                         Create New Plan
@@ -69,7 +69,7 @@ export default function WorkoutHub() {
                                 You haven't generated any workout plans yet. Let our AI Coach build one for you.
                             </p>
                         </div>
-                        <Link href="/blueprint/new">
+                        <Link href="/blueprint/gym/new">
                             <Button variant="outline" className="mt-4">
                                 Get Started
                             </Button>
@@ -109,16 +109,16 @@ export default function WorkoutHub() {
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter className="bg-muted/30 pt-4">
+                                <CardFooter className=" pt-4">
                                     <Link href={`/workouts/${plan.id}`} className="w-full">
-                                        <Button variant="ghost" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                                        <Button className="w-full transition-all">
                                             View Details
                                             <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                                         </Button>
                                     </Link>
                                 </CardFooter>
                                 {/* Decorative gradient accent */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity blur-3xl pointer-events-none" />
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity blur-3xl pointer-events-none" />
                             </Card>
                         </motion.div>
                     ))}

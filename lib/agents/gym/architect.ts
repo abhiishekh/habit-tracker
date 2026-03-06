@@ -1,5 +1,5 @@
 
-import { geminiModel } from "@/lib/gemini";
+import { model } from "@/lib/gemini";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
@@ -23,7 +23,7 @@ const createTodoTool = new DynamicStructuredTool({
 // 2. The Agent Logic
 export async function generateInitialPlan(userGoal: string, userId: string) {
   //   const llm = new ChatOpenAI({ modelName: "gpt-4o", temperature: 0 });
-  const agent = geminiModel.bindTools([createTodoTool]);
+  const agent = model.bindTools([createTodoTool]);
 
   const res = await agent.invoke([
     ["system", "You are a Master Fitness Architect. Break the user's 90-day goal into a 7-day initial 'Action Phase'. Use the tools to populate their schedule."],
@@ -37,7 +37,7 @@ export async function generateInitialPlan(userGoal: string, userId: string) {
 export async function runLifeArchitect(userId: string, userGoal: string, context: { weight: number, height: number, experience: string, refinement?: string }) {
   const writingTool = createWeeklyWorkoutTool(userId);
   const tools = [exerciseResearcherTool, writingTool];
-  const modelWithTools = geminiModel.bindTools(tools);
+  const modelWithTools = model.bindTools(tools);
 
   const missionPrompt = `You are a Senior Gym Trainer and Exercise Scientist. 
     User Context: Weight ${context.weight}kg, Height ${context.height}cm, Level: ${context.experience}.
