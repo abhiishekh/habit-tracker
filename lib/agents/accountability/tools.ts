@@ -17,7 +17,7 @@ export const checkTodaysTasksTool = (userId: string) => new DynamicStructuredToo
       const [workouts, incomeTasks, projectTasks] = await Promise.all([
         prisma.workout.findMany({
           where: { 
-            plan: { userId },
+            workoutPlan: { userId },
             dayOfWeek 
           },
           include: { exercises: true }
