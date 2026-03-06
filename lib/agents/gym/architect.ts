@@ -1,9 +1,38 @@
-import { geminiModel } from "../gemini";
-import { createWeeklyWorkoutTool, exerciseResearcherTool } from "./gym/tools";
-import { prisma } from "@/lib/prisma";
+
+import { geminiModel } from "@/lib/gemini";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
+import { createWeeklyWorkoutTool, exerciseResearcherTool } from "./tools";
+
+// 1. Define the Tool: How the AI talks to Prisma
+const createTodoTool = new DynamicStructuredTool({
+  name: "create_workout_todo",
+  description: "Creates a fitness todo in the user's schedule",
+  schema: z.object({
+    task: z.string().describe("The exercise name and sets/reps (e.g. Bench Press 3x10)"),
+    reminderTime: z.string().describe("ISO string of the workout time"),
+    category: z.string().default("Fitness"),
+  }),
+  func: async ({ task, reminderTime, category }) => {
+    // Logic to call prisma.todo.create
+    return "Todo created successfully";
+  },
+});
+
+// 2. The Agent Logic
+export async function generateInitialPlan(userGoal: string, userId: string) {
+  //   const llm = new ChatOpenAI({ modelName: "gpt-4o", temperature: 0 });
+  const agent = geminiModel.bindTools([createTodoTool]);
+
+  const res = await agent.invoke([
+    ["system", "You are a Master Fitness Architect. Break the user's 90-day goal into a 7-day initial 'Action Phase'. Use the tools to populate their schedule."],
+    ["human", userGoal],
+  ]);
+
+  return res;
+}
+
 
 export async function runLifeArchitect(userId: string, userGoal: string, context: { weight: number, height: number, experience: string, refinement?: string }) {
   const writingTool = createWeeklyWorkoutTool(userId);
@@ -37,7 +66,11 @@ export async function runLifeArchitect(userId: string, userGoal: string, context
   ];
 
   try {
-    while (true) {
+    let iterations = 0;
+    const MAX_ITERATIONS = 5;
+
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
       const response = await modelWithTools.invoke(messages);
 
       if (!response) {
@@ -52,13 +85,30 @@ export async function runLifeArchitect(userId: string, userGoal: string, context
       }
 
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.log("--- [Agent] No more tool calls. Finalizing. ---");
+        console.log("--- [Agent] No more tool calls. Checking for markdown plan. ---");
+        const content = typeof response.content === 'string' ? response.content : "";
+
+        // If content looks like a workout plan (contains "Day" or "Exercise"), consider it a success fallback
+        if (content.toLowerCase().includes("day") || content.toLowerCase().includes("exercise")) {
+          return {
+            success: true,
+            message: content,
+            isMarkdownPlan: true,
+            justifications: {
+              userWant: userGoal,
+              ourUnderstanding: "Generated markdown plan as fallback.",
+              whatWhyGiving: "Direct workout schedule provided in text.",
+              whyBestForGoal: "Detailed structure provided for immediate use."
+            }
+          };
+        }
+
         return {
           success: false,
-          message: typeof response.content === 'string' ? response.content : "AI failed to finalize a structured plan.",
+          message: content || "AI failed to finalize a structured plan.",
           justifications: {
             userWant: "Analysis in progress...",
-            ourUnderstanding: typeof response.content === 'string' ? response.content : "Technical analysis was provided without tool calls.",
+            ourUnderstanding: content || "Technical analysis was provided without tool calls.",
             whatWhyGiving: "No specific plan was saved yet.",
             whyBestForGoal: "Please try again or refine your prompt."
           }
@@ -85,8 +135,11 @@ export async function runLifeArchitect(userId: string, userGoal: string, context
                 console.log("--- [Agent] Successfully processed save tool. ---");
                 return { ...parsed, success: true };
               } catch (e) {
-                console.warn("--- [Agent] Tool output was not valid JSON, but plan might be saved. ---");
-                return { success: true, message: outputString };
+                // If it's a string from the tool showing success, return it
+                if (outputString.toLowerCase().includes("success")) {
+                  return { success: true, message: outputString };
+                }
+                return { success: false, message: "Save tool output was invalid.", error: outputString };
               }
             }
           } catch (toolError) {

@@ -3,7 +3,7 @@ import HabitImpactGraph from '../HabitImpactGraph'
 
 const HeroSection = () => {
     return (
-        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-zinc-950 px-6">
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-zinc-950 px-6 pt-30">
             {/* Subtle Background Glow */}
 
             <div className="absolute top-0 -z-10 h-full w-full pointer-events-none

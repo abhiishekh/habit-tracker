@@ -64,6 +64,13 @@ model User {
   weight      Float?
   fitnessGoal String? // "Bulking", "Cutting", "Strength"
   experience  String? // "Beginner", "Intermediate"
+
+  incomePlans   IncomePlan[]    // ✅ NEW
+  projectPlans  ProjectPlan[]   // ✅ NEW
+  careerPlans   CareerPlan[]    // ✅ NEW
+  userProfile   UserProfile?    // ✅ NEW
+  feedbacks     UserFeedback[]  // ✅ NEW
+  replanLogs    ReplanLog[]
 }
 
 model Habit {
@@ -186,4 +193,164 @@ model WorkoutExercise {
   completedSets Int    @default(0)
   
   workout     Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+}
+
+model UserProfile {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @unique @db.ObjectId
+  profession    String?
+  skills        String[]
+  monthlyIncome Float?
+  fitnessLevel  String?
+  primaryGoal   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model IncomePlan {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String       @db.ObjectId
+  goal         String
+  targetAmount Float
+  strategy     String
+  startDate    DateTime
+  endDate      DateTime
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  weeks IncomeWeek[]
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model IncomeWeek {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  planId         String       @db.ObjectId
+  weekNumber     Int
+  focus          String
+  targetEarnings Float
+  createdAt      DateTime     @default(now())
+
+  tasks IncomeTask[]
+  plan  IncomePlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model IncomeTask {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  weekId          String     @db.ObjectId
+  day             Int
+  action          String
+  platform        String?
+  timeRequired    Float
+  expectedOutcome String
+  priority        Int
+  isCompleted     Boolean    @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime   @default(now())
+
+  week IncomeWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+}
+
+model ProjectPlan {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String         @db.ObjectId
+  projectName    String
+  description    String
+  techStack      String
+  totalDays      Int
+  mvpDescription String
+  startDate      DateTime
+  endDate        DateTime
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  phases ProjectPhase[]
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProjectPhase {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  planId      String        @db.ObjectId
+  phaseNumber Int
+  phaseName   String
+  startDay    Int
+  endDay      Int
+  createdAt   DateTime      @default(now())
+
+  tasks ProjectTask[]
+  plan  ProjectPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model ProjectTask {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  phaseId        String    @db.ObjectId
+  dayNumber      Int
+  title          String
+  description    String
+  estimatedHours Float
+  type           String    // "frontend" | "backend" | "design" | "testing" | "deployment"
+  isCompleted    Boolean   @default(false)
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  phase ProjectPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+}
+
+model UserFeedback {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String   @db.ObjectId
+  feedback            String
+  sentiment           String   // "positive" | "neutral" | "negative" | "overwhelmed" | "motivated"
+  planType            String   // "gym" | "income" | "project" | "career" | "general"
+  suggestedAdjustment String
+  createdAt           DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ReplanLog {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  domain      String
+  reason      String
+  adjustments String   // Store as JSON string
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model CareerPlan {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String         @db.ObjectId
+  currentRole    String
+  targetRole     String
+  targetCompany  String?
+  timelineWeeks  Int
+  strategy       String
+  startDate      DateTime
+  endDate        DateTime
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  milestones CareerMilestone[]
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CareerMilestone {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  planId      String    @db.ObjectId
+  weekNumber  Int
+  title       String
+  description String
+  tasks       String[]  // Simple string array for career tasks
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  plan CareerPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
