@@ -1,7 +1,8 @@
 "use client"
 import { AddTodoModal } from "@/features/todos/add-todo-modal";
 import { TodoItem } from "@/features/todos/todo-item";
-import { Plus, Loader2, ClipboardList, Smartphone, Send, Sparkles } from "lucide-react";
+import { Plus, ClipboardList, Smartphone, Send, Sparkles } from "lucide-react";
+import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { AiGoalAssistant } from "@/features/ai-goals/ai-goal-assistant";
 
 import { useState, useEffect } from "react";
@@ -85,7 +86,7 @@ export default function TodosPage() {
                         title="Send test WhatsApp message"
                         className="h-12 px-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-slate-400 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50"
                     >
-                        {testLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send size={20} className="mr-2" />}
+                        {testLoading ? <UflLoaderInline style="flip" compact={true} /> : <Send size={20} className="mr-2" />}
                         <span className="hidden sm:inline font-medium text-sm">Test WA</span>
                     </button>
                     <button
@@ -106,7 +107,7 @@ export default function TodosPage() {
                             : "bg-slate-100 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-400"
                             }`}
                     >
-                        {toggleLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Smartphone size={24} />}
+                        {toggleLoading ? <UflLoaderInline style="flip" compact={true} /> : <Smartphone size={24} />}
                     </button>
                     <button onClick={() => setIsModalOpen(true)} className="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
                         <Plus size={24} />
@@ -116,7 +117,7 @@ export default function TodosPage() {
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
-                    <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                    <UflLoaderInline style="flip" />
                     <p className="text-slate-500 font-medium tracking-wide">Loading your focus...</p>
                 </div>
             ) : tasks.length > 0 ? (

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { CheckCircle2, Circle, Loader2, Info } from "lucide-react"
+import { CheckCircle2, Circle, Info } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -44,7 +45,7 @@ export function WorkoutExerciseItem({ exercise, workoutId }: { exercise: any, wo
                     className="text-primary hover:scale-110 transition-transform"
                 >
                     {isLoading ? (
-                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <UflLoaderInline style="flip" className="py-0 h-6 w-6" />
                     ) : isCompleted ? (
                         <CheckCircle2 className="w-6 h-6 fill-primary text-primary-foreground" />
                     ) : (

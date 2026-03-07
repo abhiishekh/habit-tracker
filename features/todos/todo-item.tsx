@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, Clock, Check, Loader2, Plus } from "lucide-react";
+import { Bell, Clock, Check, Plus } from "lucide-react";
+import { UflLoaderInline } from "@/components/ui/ufl-loader";
 
 interface TodoProps {
   id?: string;
@@ -107,7 +108,7 @@ export function TodoItem({ id, task, reminderTime, category, status, completed }
             : "border-slate-300 dark:border-zinc-700 group-hover:border-indigo-500 shadow-sm"
             }`}>
           {loading ? (
-            <Loader2 size={12} className="animate-spin text-white" />
+            <UflLoaderInline style="flip" compact={true} />
           ) : isCompleted ? (
             <Check size={14} className="text-white" strokeWidth={4} />
           ) : null}

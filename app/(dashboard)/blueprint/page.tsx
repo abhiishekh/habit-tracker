@@ -9,13 +9,13 @@ import {
     BriefcaseBusiness,
     Code,
     Dumbbell,
-    Loader2,
     Sparkles,
     TrendingUp,
     Wallet,
     PlusCircle,
     CalendarDays,
 } from "lucide-react";
+import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -150,7 +150,7 @@ export default function BlueprintHubPage() {
 
                 {isLoading ? (
                     <div className="flex items-center justify-center p-12">
-                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                        <UflLoaderInline style="flip" />
                     </div>
                 ) : activeBlueprints.length === 0 ? (
                     <div className="text-center p-12 bg-primary/5 rounded-2xl border border-primary/10 border-dashed">

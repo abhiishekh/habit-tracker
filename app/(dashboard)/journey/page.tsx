@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { getJourneyData } from '@/app/actions/journey';
-import { Flame, CheckCircle, Target, Loader2, Calendar } from 'lucide-react';
+import { Flame, CheckCircle, Target, Calendar } from 'lucide-react';
+import { UflLoaderInline } from '@/components/ui/ufl-loader';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 
@@ -32,9 +33,8 @@ export default function JourneyPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 px-6 gap-4 text-indigo-500">
-        <Loader2 size={40} className="animate-spin" />
-        <p className="font-medium text-slate-600 dark:text-slate-400">Loading your history...</p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <UflLoaderInline style="flip" text="Loading your journey..." />
       </div>
     );
   }

@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { redirect } from 'next/navigation'
-import { Shield, Smartphone, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
+import { Shield, Smartphone, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { UflLoaderInline } from '@/components/ui/ufl-loader'
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { getGlobalWhatsappStatus, toggleGlobalWhatsapp } from '@/app/action'
@@ -58,7 +59,7 @@ const AdminDashboard = () => {
     if (status === "loading" || isLoading) {
         return (
             <div className="flex h-[80vh] items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                <UflLoaderInline style="flip" />
             </div>
         )
     }

@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Sparkles, ArrowRight, Dumbbell, Wallet, Code, BriefcaseBusiness } from "lucide-react"
+import { Sparkles, ArrowRight, Dumbbell, Wallet, Code, BriefcaseBusiness } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import Link from 'next/link'
 
 const iconMap: Record<string, any> = {
@@ -37,7 +38,9 @@ export function ActiveBlueprintsWidget() {
     if (isLoading) {
         return (
             <Card className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 flex flex-col items-center justify-center min-h-[300px]">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <div className="flex items-center justify-center py-10">
+                    <UflLoaderInline style="flip" />
+                </div>
                 <p className="text-sm text-muted-foreground mt-4">Loading your AI Blueprints...</p>
             </Card>
         )

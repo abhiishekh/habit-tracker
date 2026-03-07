@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Brain, TrendingUp, Target, AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { Brain, TrendingUp, Target, AlertCircle, Sparkles } from "lucide-react";
+import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { getInsightsData } from "@/app/actions/insights";
@@ -28,9 +29,8 @@ export default function InsightsPage() {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 px-6 gap-4 text-indigo-500">
-                <Loader2 size={40} className="animate-spin" />
-                <p className="font-medium">Crunching your data...</p>
+            <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+                <UflLoaderInline style="flip" text="Analyzing your progress..." />
             </div>
         );
     }

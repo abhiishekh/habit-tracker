@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Github, ExternalLink, Star, GitFork, Loader2, FolderCode, CircleDot, GitCommit, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Github, ExternalLink, Star, GitFork, FolderCode, CircleDot, GitCommit, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Separator } from "@/components/ui/separator";
@@ -158,7 +159,7 @@ export default function CodingPage() {
                 <section className="w-full flex justify-center">
                     {loadingAdvanced ? (
                         <Card className="w-full max-w-6xl p-12 flex flex-col items-center justify-center border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 rounded-3xl gap-4">
-                            <Loader2 size={30} className="animate-spin text-indigo-500" />
+                            <UflLoaderInline style="flip" />
                             <p className="text-sm text-slate-500 font-medium">
                                 Analyzing contribution pattern...
                             </p>
@@ -263,7 +264,7 @@ export default function CodingPage() {
                     <div className="lg:col-span-1">
                         {loadingAdvanced ? (
                             <Card className="p-12 flex flex-col items-center justify-center border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 rounded-3xl gap-4 h-full">
-                                <Loader2 size={30} className="animate-spin text-indigo-500" />
+                                <UflLoaderInline style="flip" />
                                 <p className="text-sm text-slate-500 font-medium">Syncing commits...</p>
                             </Card>
                         ) : (
@@ -281,7 +282,7 @@ export default function CodingPage() {
 
                 {loadingStats ? (
                     <div className="flex justify-center py-20 text-indigo-500">
-                        <Loader2 size={40} className="animate-spin" />
+                        <UflLoaderInline style="flip" />
                     </div>
                 ) : stats ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, BriefcaseBusiness } from "lucide-react"
+import { BriefcaseBusiness } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 
 const formSchema = z.object({
     goal: z.string().min(10, "Describe your career goal briefly."),
@@ -201,7 +202,7 @@ export function CareerBlueprintForm() {
 
                         <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white" disabled={isLoading}>
                             {isLoading ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing Job Market & Mapping Plan...</>
+                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Analyzing Job Market & Mapping Plan...</>
                             ) : (
                                 "Generate Career Roadmap"
                             )}

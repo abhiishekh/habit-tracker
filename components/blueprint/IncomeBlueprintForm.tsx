@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Sparkles, Wallet } from "lucide-react"
+import { Sparkles, Wallet } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 
 const formSchema = z.object({
     goal: z.string().min(10, "Tell us more about your income goal."),
@@ -150,7 +151,7 @@ export function IncomeBlueprintForm() {
 
                         <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" disabled={isLoading}>
                             {isLoading ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Architecting Plan...</>
+                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Plan...</>
                             ) : (
                                 "Generate My Income Plan"
                             )}

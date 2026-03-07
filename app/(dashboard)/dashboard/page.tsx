@@ -45,7 +45,7 @@ import { ActiveBlueprintsWidget } from '@/components/dashboard/ActiveBlueprintsW
 
 const Dashboard = () => {
     return (
-        <div className="space-y-8 pb-8 px-6">
+        <div className="space-y-8 ">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
@@ -56,7 +56,7 @@ const Dashboard = () => {
                     <PopoverTrigger asChild>
                         <Button>Add New Task</Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[500px] p-0" align="end">
+                    <PopoverContent className="w-125 p-0" align="end">
                         <TaskForm />
                     </PopoverContent>
                 </Popover>
@@ -127,7 +127,7 @@ const Dashboard = () => {
                         <h3 className="font-bold text-slate-900 dark:text-white">Coding & Freelance Output</h3>
                         <Activity className="h-4 w-4 text-slate-500" />
                     </div>
-                    <div className="h-[300px] w-full">
+                    <div className="h-75 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={githubActivityData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
@@ -150,7 +150,7 @@ const Dashboard = () => {
                         <h3 className="font-bold text-slate-900 dark:text-white">Energy vs Gym Intensity</h3>
                         <Activity className="h-4 w-4 text-slate-500" />
                     </div>
-                    <div className="h-[300px] w-full">
+                    <div className="h-75 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={energyGymData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                                 <defs>

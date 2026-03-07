@@ -1,7 +1,8 @@
 "use client"
 import TaskForm from '@/components/tasks/task-form'
 import { TodoItem } from '@/features/todos/todo-item'
-import { Loader2, Target } from 'lucide-react'
+import { Target } from 'lucide-react'
+import { UflLoaderInline } from '@/components/ui/ufl-loader'
 import React, { useEffect, useState } from 'react'
 
 const TasksPage = () => {
@@ -47,8 +48,8 @@ const TasksPage = () => {
                     </h2>
 
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20 gap-4">
-                            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                        <div className="flex flex-col items-center justify-center py-12">
+                            <UflLoaderInline style="flip" />
                             <p className="text-slate-500 font-medium">Loading your journey...</p>
                         </div>
                     ) : tasks.length > 0 ? (

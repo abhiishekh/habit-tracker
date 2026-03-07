@@ -17,7 +17,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Code } from "lucide-react"
+import { Code } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import {
     Select,
     SelectContent,
@@ -168,7 +169,7 @@ export function ProjectBlueprintForm() {
 
                         <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white" disabled={isLoading}>
                             {isLoading ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Architecting Project...</>
+                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Project...</>
                             ) : (
                                 "Generate Project Roadmap"
                             )}

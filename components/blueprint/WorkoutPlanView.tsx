@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle2, Circle, Loader2 } from "lucide-react"
+import { CheckCircle2, Circle } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import { WorkoutExerciseItem } from "./WorkoutExerciseItem"
 
 
@@ -36,8 +37,8 @@ export function WorkoutPlanView({ planId }: WorkoutPlanViewProps) {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center p-12">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="flex items-center justify-center py-10">
+                <UflLoaderInline style="flip" />
             </div>
         )
     }

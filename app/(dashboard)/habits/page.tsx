@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Loader2, Sparkles, Activity } from "lucide-react";
+import { Plus, Sparkles, Activity } from "lucide-react";
+import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { AddHabitModal } from "@/features/habits/add-habit-modal";
 import { Button } from "@/components/ui/button";
 
@@ -50,7 +51,7 @@ export default function HabitsPage() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+          <UflLoaderInline style="flip" />
           <p className="text-slate-500 font-medium text-lg">Loading your rituals...</p>
         </div>
       ) : habits.length > 0 ? (
