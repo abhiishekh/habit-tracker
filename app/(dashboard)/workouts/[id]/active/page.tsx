@@ -12,7 +12,13 @@ import {
     Timer,
     AlertCircle,
     RotateCcw,
-    X
+    X,
+    Dumbbell,
+    Info,
+    Check,
+    ChevronLeft,
+    ChevronRight,
+    Trophy
 } from "lucide-react"
 import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import { toast } from "sonner"
