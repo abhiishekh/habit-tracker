@@ -1,14 +1,13 @@
 import Link from 'next/link'
 import HabitImpactGraph from '../HabitImpactGraph'
+import AnimatedGradient from '../AnimatedGradient'
+import { Sparkles, MessageSquare, Terminal, ArrowRight } from 'lucide-react'
 
 const HeroSection = () => {
     return (
-        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-zinc-950 px-6 pt-30">
-            {/* Subtle Background Glow */}
-
-            <div className="absolute top-0 -z-10 h-full w-full pointer-events-none
-  bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))]
-  from-indigo-500/10 via-transparent to-transparent" />
+        <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-white dark:bg-zinc-950 px-6 pt-32 pb-40">
+            {/* Premium Animated Background */}
+            <AnimatedGradient />
 
             {/* Radial overlay */}
             <div
@@ -29,58 +28,69 @@ const HeroSection = () => {
                 }}
             />
 
-            <div className="text-center max-w-3xl">
-                <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900 dark:text-white mb-6">
-                    Level up your <span className="text-indigo-500">habits.</span>
+            <div className="absolute top-40 -left-10 md:left-20 animate-bounce duration-[3s] opacity-20 md:opacity-100 italic">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl shadow-indigo-500/10">
+                    <MessageSquare size={16} className="text-emerald-500" />
+                    <span className="text-xs font-bold font-mono">Logged: 2h Coding</span>
+                </div>
+            </div>
+
+            <div className="absolute bottom-40 -right-10 md:right-20 animate-pulse opacity-20 md:opacity-100 italic">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl shadow-indigo-500/10 transform rotate-6">
+                    <Sparkles size={16} className="text-amber-500" />
+                    <span className="text-xs font-bold font-mono">Leveling Up...</span>
+                </div>
+            </div>
+
+            <div className="text-center max-w-4xl relative z-10">
+                <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-slate-900 dark:text-white mb-8 uppercase leading-[0.9]">
+                    Level up your <span className="text-indigo-600 dark:text-indigo-400">habits<span className="text-slate-400 dark:text-zinc-800">.</span></span>
                 </h1>
 
-                <div className="flex flex-col items-center gap-5 mb-10 text-center px-4">
-
-                    {/* 1. The Killer Feature Badge - Instantly catches the eye */}
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-semibold shadow-sm">
+                <div className="flex flex-col items-center gap-6 mb-12 text-center px-4">
+                    {/* Killer Feature Badge */}
+                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-50/50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-black uppercase tracking-widest shadow-xl shadow-emerald-500/5">
                         <span className="relative flex h-2 w-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </span>
-                        Automated via WhatsApp Sync
+                        WhatsApp Sync Active
                     </div>
 
-                    {/* 2. The Core Promise - Short, scannable, high contrast */}
-                    <h2 className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-                        The minimal <span className="font-semibold text-slate-900 dark:text-white underline underline-offset-4 decoration-indigo-500">X-day challenge</span> tracker for developers.
-                        <br className="hidden md:block" /> Log your code, gym progress, and financial growth in one premium space.
+                    <h2 className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
+                        The <span className="text-slate-900 dark:text-white font-bold">90-day reset</span> protocol for builders.
+                        <br />
+                        Automate your habits, track your code, and architect your physical & financial transformation in one premium dashboard.
                     </h2>
-
-                    {/* 3. The Joke - Hidden on mobile to keep the screen clean */}
-                    <p className="hidden sm:block text-sm text-slate-400 dark:text-slate-500 italic mt-2">
-                        (Because your life reset deserves a better dashboard than a spreadsheet.)
-                    </p>
-
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link
                         href="/todos"
-                        className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl transition-all shadow-lg shadow-indigo-500/20 active:scale-95 hover:cursor-pointer"
+                        className="px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-2xl shadow-indigo-500/30 active:scale-95 hover:cursor-pointer flex items-center gap-2"
                     >
-                        Start Tracking
+                        Initialize Dashboard
+                        <ArrowRight size={18} />
                     </Link>
                     <Link
                         href="/journey"
-                        className="px-8 py-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white font-semibold rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all hover:cursor-pointer"
+                        className="px-10 py-5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white font-bold rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all hover:cursor-pointer shadow-lg"
                     >
-                        View My Progress
+                        View Public Progress
                     </Link>
                 </div>
+
+                <p className="mt-8 text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-zinc-600 opacity-50">
+                    Track code • Gym • Finance • Mindset
+                </p>
             </div>
 
-            {/* Preview of the App (Decorative) */}
-            <div className="mt-20 w-full max-w-5xl rounded-3xl border border-slate-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 p-4 backdrop-blur-sm">
-                <HabitImpactGraph />
+            {/* App Preview Frame */}
+            <div className="mt-24 w-full max-w-5xl rounded-[3rem] border-8 border-slate-100/50 dark:border-zinc-900/50 bg-white/50 dark:bg-zinc-900/50 p-6 backdrop-blur-md shadow-[0_40px_100px_-20px_rgba(99,102,241,0.2)]">
+                <div className="rounded-[2rem] overflow-hidden border border-slate-200 dark:border-zinc-800">
+                    <HabitImpactGraph />
+                </div>
             </div>
-            <em className='text-slate-600 dark:text-slate-400'>
-                track your code, gym progress, and financial growth in one premium space.
-            </em>
         </div>
     )
 }

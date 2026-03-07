@@ -49,13 +49,13 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                   Continue with Google
                 </button>
 
-                <div className="relative">
+                {/* <div className="relative">
                   <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200 dark:border-zinc-800"></span></div>
                   <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-zinc-950 px-2 text-slate-400">Or use email</span></div>
-                </div>
+                </div> */}
 
                 {/* Email Login Form */}
-                <form onSubmit={handleEmailLogin} className="space-y-3">
+                {/* <form onSubmit={handleEmailLogin} className="space-y-3">
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
@@ -74,7 +74,7 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                     {isLoading ? "Sending..." : "Send Magic Link"}
                     {!isLoading && <ArrowRight size={18} />}
                   </button>
-                </form>
+                </form> */}
               </div>
 
               <p className="mt-8 text-center text-xs text-slate-400 leading-relaxed px-6">

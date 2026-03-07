@@ -4,6 +4,7 @@ import { UflLoader, UflLoaderInline, type LoaderStyle } from "@/components/ui/uf
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import AnimatedGradient from "@/components/AnimatedGradient"
 
 const variants: { style: LoaderStyle; label: string; desc: string; dark?: boolean }[] = [
     { style: "bounce", label: "Bounce", desc: "Staggered letter bounce + shimmer bar" },
@@ -20,7 +21,7 @@ export default function LoaderDemoPage() {
 
     return (
         <div className="min-h-screen bg-background py-16 px-4">
-
+            <AnimatedGradient/>
             {fullscreen && (
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm gap-10">
                     <UflLoader style={fullscreen} variant="inline" text="Loading your data..." />
