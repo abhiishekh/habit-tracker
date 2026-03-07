@@ -1,7 +1,8 @@
 "use client"
 
-import React from 'react'
-import { Activity, Flame, Zap, Trophy, Github, Users } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Activity, Flame, Zap, Trophy, Github, Users, Plus, ArrowUpRight, TrendingUp } from 'lucide-react'
 import {
     BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
 } from 'recharts'
@@ -11,187 +12,223 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-
-// --- MOCK DATA FOR 90-DAY CHALLENGE ---
-const githubActivityData = [
-    { day: 'Mon', commits: 4, freelance: 2 },
-    { day: 'Tue', commits: 7, freelance: 3 },
-    { day: 'Wed', commits: 5, freelance: 1 },
-    { day: 'Thu', commits: 12, freelance: 4 },
-    { day: 'Fri', commits: 8, freelance: 2 },
-    { day: 'Sat', commits: 2, freelance: 6 },
-    { day: 'Sun', commits: 1, freelance: 5 },
-]
-
-const energyGymData = [
-    { day: 'Mon', energy: 80, workoutIntensity: 75 },
-    { day: 'Tue', energy: 90, workoutIntensity: 85 },
-    { day: 'Wed', energy: 60, workoutIntensity: 40 }, // Rest day
-    { day: 'Thu', energy: 85, workoutIntensity: 90 },
-    { day: 'Fri', energy: 70, workoutIntensity: 65 },
-    { day: 'Sat', energy: 95, workoutIntensity: 100 },
-    { day: 'Sun', energy: 100, workoutIntensity: 20 }, // Active recovery
-]
-
-const networkingData = [
-    { week: 'Week 1', connections: 5, posts: 2 },
-    { week: 'Week 2', connections: 12, posts: 4 },
-    { week: 'Week 3', connections: 8, posts: 3 },
-    { week: 'Week 4', connections: 20, posts: 7 },
-]
-
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import TaskForm from '@/components/tasks/task-form'
 import { ActiveBlueprintsWidget } from '@/components/dashboard/ActiveBlueprintsWidget'
 
 const Dashboard = () => {
+    const [data, setData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const res = await fetch('/api/dashboard/summary');
+                const result = await res.json();
+                setData(result);
+            } catch (err) {
+                console.error("Failed to load dashboard data", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchDashboardData();
+    }, []);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-4">
+                <UflLoaderInline style="flip" />
+                <p className="text-sm font-medium text-slate-500 animate-pulse">Syncing your life architecture...</p>
+            </div>
+        );
+    }
+
+    const stats = data?.stats || {
+        habitScore: { value: "0%", change: "N/A" },
+        streak: { value: 0, label: "days" },
+        energy: { value: 80, label: "/ 100" },
+        commits: { value: 0, label: "This week" }
+    };
+
     return (
-        <div className="space-y-8 pb-8 px-6">
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-8 pb-20"
+        >
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">UFL Day 14 of 90 • Let's get to work.</p>
+                    <h1 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white uppercase">Dashboard</h1>
+                    <div className="flex items-center gap-2 mt-2">
+                        <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                        <p className="text-sm font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">
+                            UFL Session Active • <span className="text-indigo-500">Day {stats.streak.value} of 90</span>
+                        </p>
+                    </div>
                 </div>
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button>Add New Task</Button>
+                        <Button className="rounded-2xl h-12 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-xl shadow-indigo-500/20 active:scale-95 transition-all gap-2">
+                            <Plus size={18} />
+                            Deploy New Task
+                        </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[500px] p-0" align="end">
+                    <PopoverContent className="w-125 p-0 border-none shadow-2xl rounded-3xl" align="end">
                         <TaskForm />
                     </PopoverContent>
                 </Popover>
             </div>
 
             {/* Top Stats Row */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {/* Score Card */}
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Habit Score</h3>
-                        <Trophy className="h-4 w-4 text-indigo-500" />
-                    </div>
-                    <div className="mt-4 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-slate-900 dark:text-white">92%</span>
-                        <span className="text-sm text-green-500 font-medium">+4% from last week</span>
-                    </div>
-                </div>
-
-                {/* Streak Card */}
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Daily Streak</h3>
-                        <Flame className="h-4 w-4 text-orange-500" />
-                    </div>
-                    <div className="mt-4 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-slate-900 dark:text-white">14</span>
-                        <span className="text-sm text-slate-500 dark:text-slate-400">days</span>
-                    </div>
-                </div>
-
-                {/* Energy Card */}
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg Energy</h3>
-                        <Zap className="h-4 w-4 text-yellow-500" />
-                    </div>
-                    <div className="mt-4 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-slate-900 dark:text-white">82</span>
-                        <span className="text-sm text-slate-500 dark:text-slate-400">/ 100</span>
-                    </div>
-                </div>
-
-                {/* GitHub Card */}
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Commits</h3>
-                        <Github className="h-4 w-4 text-slate-900 dark:text-white" />
-                    </div>
-                    <div className="mt-4 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-slate-900 dark:text-white">39</span>
-                        <span className="text-sm text-green-500 font-medium">This week</span>
-                    </div>
-                </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                    { label: "Habit Score", value: stats.habitScore.value, sub: stats.habitScore.change, icon: Trophy, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+                    { label: "Daily Streak", value: stats.streak.value, sub: "Consecutive Days", icon: Flame, color: "text-orange-500", bg: "bg-orange-500/10" },
+                    { label: "Avg Energy", value: stats.energy.value, sub: "/ 100 Flow", icon: Zap, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+                    { label: "Code Output", value: stats.commits.value, sub: "Units Produced", icon: Github, color: "text-slate-900 dark:text-white", bg: "bg-slate-500/10" }
+                ].map((stat, i) => (
+                    <motion.div
+                        key={stat.label}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="group relative rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 hover:border-indigo-500/50 transition-all duration-500 hover:shadow-xl hover:shadow-indigo-500/5"
+                    >
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-zinc-600 font-mono">{stat.label}</h3>
+                            <div className={`p-2 rounded-xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform`}>
+                                <stat.icon size={18} />
+                            </div>
+                        </div>
+                        <div className="mt-4 flex flex-col">
+                            <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">{stat.value}</span>
+                            <div className="flex items-center gap-1 mt-1 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">
+                                <TrendingUp size={10} />
+                                {stat.sub}
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
             </div>
 
             {/* AI Blueprints Section */}
             <div className="grid grid-cols-1 gap-6">
-                <ActiveBlueprintsWidget />
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4 }}
+                >
+                    <ActiveBlueprintsWidget />
+                </motion.div>
             </div>
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-                {/* Coding & GitHub Activity */}
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-                    <div className="mb-6 flex items-center justify-between">
-                        <h3 className="font-bold text-slate-900 dark:text-white">Coding & Freelance Output</h3>
-                        <Activity className="h-4 w-4 text-slate-500" />
-                    </div>
-                    <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={githubActivityData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                                <Tooltip
-                                    cursor={{ fill: 'transparent' }}
-                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                />
-                                <Bar dataKey="commits" name="GitHub Commits" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="freelance" name="Freelance Hours" fill="#a5b4fc" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Energy & Gym Progress */}
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-                    <div className="mb-6 flex items-center justify-between">
-                        <h3 className="font-bold text-slate-900 dark:text-white">Energy vs Gym Intensity</h3>
-                        <Activity className="h-4 w-4 text-slate-500" />
-                    </div>
-                    <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={energyGymData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#eab308" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                                <Area type="monotone" dataKey="energy" name="Energy Level" stroke="#eab308" strokeWidth={3} fillOpacity={1} fill="url(#colorEnergy)" />
-                                <Area type="monotone" dataKey="workoutIntensity" name="Gym Intensity" stroke="#ef4444" strokeWidth={3} fill="transparent" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Networking & Social Growth */}
-                <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 lg:col-span-2">
-                    <div className="mb-6 flex items-center justify-between">
-                        <h3 className="font-bold text-slate-900 dark:text-white">Networking & Content Creation</h3>
-                        <Users className="h-4 w-4 text-slate-500" />
+                {/* Coding Activity */}
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50"
+                >
+                    <div className="mb-8 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Engineering Velocity</h3>
+                            <p className="text-xs text-slate-500 font-medium">Daily Git Commits & Project Time</p>
+                        </div>
+                        <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
+                            <Activity className="h-5 w-5 text-indigo-500" />
+                        </div>
                     </div>
                     <div className="h-75 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={networkingData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                                <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-                                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                                <Line type="monotone" dataKey="connections" name="New Connections" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
-                                <Line type="monotone" dataKey="posts" name="Social Posts" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
+                            <BarChart data={data?.githubActivityData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.1} />
+                                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(99, 102, 241, 0.05)' }}
+                                    contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', background: '#09090b', color: '#fff' }}
+                                />
+                                <Bar dataKey="commits" name="Commits" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                                <Bar dataKey="freelance" name="Freelance" fill="#a5b4fc" radius={[6, 6, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
+
+                {/* Bio-Rhythms (Energy vs Gym) */}
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50"
+                >
+                    <div className="mb-8 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Bio-Rhythm Feedback</h3>
+                            <p className="text-xs text-slate-500 font-medium">Daily Energy Resonance & Workout Load</p>
+                        </div>
+                        <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
+                            <TrendingUp className="h-5 w-5 text-yellow-500" />
+                        </div>
+                    </div>
+                    <div className="h-75 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={data?.energyGymData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#eab308" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.1} />
+                                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                                <Tooltip contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', background: '#09090b', color: '#fff' }} />
+                                <Area type="monotone" dataKey="energy" name="Energy" stroke="#eab308" strokeWidth={4} fillOpacity={1} fill="url(#colorEnergy)" />
+                                <Area type="monotone" dataKey="workoutIntensity" name="Intensity" stroke="#ef4444" strokeWidth={4} fill="transparent" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </motion.div>
+
+                {/* Social Proof & Connections */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/50 lg:col-span-2"
+                >
+                    <div className="mb-8 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Authority Building</h3>
+                            <p className="text-xs text-slate-500 font-medium">LinkedIn/Twitter Outreach & Content Sync</p>
+                        </div>
+                        <div className="h-10 w-10 rounded-2xl bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
+                            <Users className="h-5 w-5 text-emerald-500" />
+                        </div>
+                    </div>
+                    <div className="h-75 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={data?.networkingData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.1} />
+                                <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11 }} />
+                                <Tooltip contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', background: '#09090b', color: '#fff' }} />
+                                <Line type="monotone" dataKey="connections" name="Connections" stroke="#10b981" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
+                                <Line type="monotone" dataKey="posts" name="Posts" stroke="#3b82f6" strokeWidth={4} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
+                </motion.div>
 
             </div>
-        </div>
+        </motion.div>
     )
 }
 

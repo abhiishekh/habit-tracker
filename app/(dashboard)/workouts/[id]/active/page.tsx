@@ -9,16 +9,18 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import {
     Loader2,
-    X,
-    Check,
-    ChevronRight,
-    ChevronLeft,
-    Info,
-    CheckCircle2,
+    Timer,
+    AlertCircle,
     RotateCcw,
+    X,
     Dumbbell,
+    Info,
+    Check,
+    ChevronLeft,
+    ChevronRight,
     Trophy
 } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import { toast } from "sonner"
 import Image from "next/image"
 
@@ -109,8 +111,9 @@ export default function ActiveWorkout() {
     if (isLoading) {
         return (
             <div className="fixed inset-0 bg-background flex flex-col items-center justify-center">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
-                <p className="mt-4 text-muted-foreground">Preparing your arena...</p>
+                <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+                    <UflLoaderInline style="flip" text="Starting your session..." />
+                </div>
             </div>
         )
     }
@@ -280,7 +283,7 @@ export default function ActiveWorkout() {
                                     onClick={handleFinish}
                                 >
                                     {isFinishing ? (
-                                        <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                                        <UflLoaderInline style="flip" compact={true} className="mr-2" />
                                     ) : (
                                         <Trophy className="w-6 h-6 mr-2" />
                                     )}

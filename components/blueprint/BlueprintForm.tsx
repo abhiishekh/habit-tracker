@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
 import { Loader2, Sparkles } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import { WorkoutPlanView } from "./WorkoutPlanView"
 import { Label } from "@/components/ui/label"
 import ReactMarkdown from "react-markdown"
@@ -225,7 +226,9 @@ export function BlueprintForm() {
 
                         <Button type="submit" className="w-full" disabled={isLoading}>
                             {isLoading ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Architecting Plan...</>
+                                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                                    <UflLoaderInline style="flip" text="Architecting Plan..." />
+                                </div>
                             ) : (
                                 "Generate My Expert Plan"
                             )}
@@ -248,7 +251,7 @@ export function BlueprintForm() {
                                 className="w-full bg-yellow-600 hover:bg-yellow-700 text-white border-0"
                                 disabled={isLoading}
                             >
-                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                                {isLoading ? <UflLoaderInline style="flip" compact={true} className="mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                                 Save & Finalize Plan to Database
                             </Button>
                         </div>
@@ -304,7 +307,7 @@ export function BlueprintForm() {
                             disabled={isLoading || !refinement}
                             onClick={() => onSubmit({}, true)}
                         >
-                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Regenerate Plan"}
+                            {isLoading ? <UflLoaderInline style="flip" compact={true} className="mr-2" /> : "Regenerate Plan"}
                         </Button>
                     </div>
                 </div>

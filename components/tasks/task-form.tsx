@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
+import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { cn } from "@/lib/utils";
 import React from "react";
 
@@ -138,7 +139,7 @@ export default function TaskForm() {
                         </div>
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Create Task"}
+                        {loading ? <UflLoaderInline style="flip" compact={true} className="mr-2" /> : "Create Task"}
                     </Button>
                 </form>
             </CardContent>

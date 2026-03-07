@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react";
-import { Sparkles, X, Target, Briefcase, Calendar, Loader2, Wand2, CheckCircle2 } from "lucide-react";
+import { Sparkles, X, Target, Briefcase, Calendar, Wand2, CheckCircle2 } from "lucide-react";
+import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { motion, AnimatePresence } from "framer-motion";
 import { generateGoalTasks, addAiTasksToTodos } from "@/app/actions/ai-goals";
 import { SuggestionList } from "./suggestion-list";
@@ -148,10 +149,7 @@ export function AiGoalAssistant({ isOpen, onClose }: { isOpen: boolean; onClose:
                                         exit={{ opacity: 0, scale: 1.1 }}
                                         className="py-12 flex flex-col items-center justify-center text-center"
                                     >
-                                        <div className="relative mb-8">
-                                            <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full animate-pulse" />
-                                            <Loader2 className="h-24 w-24 animate-spin text-indigo-500 relative z-10" strokeWidth={1} />
-                                        </div>
+                                        <UflLoaderInline style="flip" text="Architecting your destiny..." />
                                         <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 italic">Architecting your path...</h3>
                                         <p className="text-slate-500 max-w-xs font-medium">Gemini is analyzing your situation and creating the perfect roadmap.</p>
                                     </motion.div>

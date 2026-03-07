@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
-    Loader2,
     ArrowLeft,
     Play,
     CheckCircle2,
@@ -18,6 +17,7 @@ import {
     Trophy,
     CalendarDays
 } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import Link from "next/link"
 
 export default function WorkoutDetail() {
@@ -49,8 +49,8 @@ export default function WorkoutDetail() {
 
     if (isLoading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <UflLoaderInline style="flip" text="Loading workout..." />
             </div>
         )
     }
@@ -123,8 +123,8 @@ export default function WorkoutDetail() {
                             transition={{ delay: index * 0.05 }}
                         >
                             <Card className={`relative overflow-hidden transition-all duration-300 ${isToday
-                                    ? "border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/5 bg-primary/2"
-                                    : "hover:border-primary/30"
+                                ? "border-primary ring-2 ring-primary/20 shadow-lg shadow-primary/5 bg-primary/2"
+                                : "hover:border-primary/30"
                                 } ${isCompleted ? "opacity-75" : ""}`}>
                                 <CardContent className="p-0">
                                     <div className="flex flex-col md:flex-row md:items-center">

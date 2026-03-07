@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Loader2, BriefcaseBusiness, Route, CheckCircle2, Link as LinkIcon, Target, CheckSquare, Square } from "lucide-react"
+import { BriefcaseBusiness, Route, CheckCircle2, Link as LinkIcon, Target, CheckSquare, Square } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import { cn } from "@/lib/utils"
 
 export function CareerPlanView({ planId }: { planId: string }) {
@@ -54,9 +55,8 @@ export function CareerPlanView({ planId }: { planId: string }) {
 
     if (isLoading) {
         return (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground animate-in fade-in duration-500">
-                <Loader2 className="w-10 h-10 animate-spin mb-4 text-amber-500" />
-                <p>Generating your career transition roadmap...</p>
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground animate-in fade-in duration-500">
+                <UflLoaderInline style="flip" text="Generating your career transition roadmap..." />
             </div>
         )
     }

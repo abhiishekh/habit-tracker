@@ -37,8 +37,8 @@ export const Heatmap = ({ calendar }: { calendar: any }) => {
                     <span>More</span>
                 </div>
             </div>
-            <div className="overflow-x-auto sm:overflow-x-visible overflow-y-hidden max-w-full">
-                <div className="flex gap-1 min-w-max pb-2">
+            <div className="w-full overflow-x-auto overflow-y-hidden">
+                <div className="flex gap-1 w-max pb-2">
                     {calendar.weeks.map((week: any, i: number) => (
                         <div key={i} className="flex flex-col gap-1">
                             {week.contributionDays.map((day: any, j: number) => (

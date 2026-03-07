@@ -5,7 +5,8 @@ import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Calendar, Target, ChevronRight, Dumbbell, Sparkles } from "lucide-react"
+import { Calendar, Target, ChevronRight, Dumbbell, Sparkles } from "lucide-react"
+import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import Link from "next/link"
 
 export default function WorkoutHub() {
@@ -32,7 +33,7 @@ export default function WorkoutHub() {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                <UflLoaderInline style="flip" text="Loading your workouts..." />
                 <p className="text-muted-foreground animate-pulse">Loading your fitness blueprints...</p>
             </div>
         )
