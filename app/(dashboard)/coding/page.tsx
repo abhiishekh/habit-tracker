@@ -165,7 +165,7 @@ export default function CodingPage() {
                             </p>
                         </Card>
                     ) : (
-                        <div className="w-auto max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto px-2 sm:px-0">
+                        <div className="w-auto max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-4xl mx-auto px-2 sm:px-0">
                             <Heatmap calendar={advancedStats.contributions} />
                         </div>
                     )}
