@@ -6,19 +6,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <section className="flex min-h-screen">
-      {/* Sidebar - Handles its own responsive width */}
+    <div className="flex flex-1 min-h-screen">
       <DashboardSidebar />
-
-      {/* Main Content Area - Padding adjusts to match sidebar width */}
-      {/* pl-16 prevents mobile content from hiding under the slim sidebar */}
-      {/* md:pl-64 pushes content over for the full desktop sidebar */}
-      {/* pt-20 clears the fixed top header (16) + adds a 4 unit gap */}
-      <main className="flex-1 flex flex-col pt-20 pl-16 md:pl-64 transition-all duration-300">
-        <div className="px-2 md:p-10 flex-1">
+      <main className="flex-1 transition-all duration-300 pt-4 lg:pl-64 pb-20 lg:pb-0">
+        <div className="container mx-auto px-4 py-6">
           {children}
         </div>
       </main>
-    </section>
+    </div>
+
   );
 }

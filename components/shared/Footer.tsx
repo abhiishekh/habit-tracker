@@ -5,7 +5,7 @@ const Footer = () => {
         <footer className="relative flex flex-col items-center justify-end overflow-hidden bg-slate-50  pb-0 dark:bg-[#09090B] border-t border-slate-200 dark:border-zinc-800">
             
             {/* 1. Standard Footer Content */}
-            {/* <div className="relative z-10 flex w-full max-w-5xl flex-col items-center justify-between gap-4 px-6 md:flex-row pb-12">
+            <div className="relative z-10 flex w-full max-w-5xl flex-col items-center justify-between gap-4 px-6 md:flex-row pb-12">
                 <p className="text-sm text-slate-500 font-medium">
                     Building habits. Tracking progress. Unfucking life.
                 </p>
@@ -14,7 +14,7 @@ const Footer = () => {
                     <a href="/stats" className="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Insights</a>
                     <a href="#" className="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors">Twitter</a>
                 </div>
-            </div> */}
+            </div>
 
             {/* 2. Giant Animated UFL Text */}
             <div className="pointer-events-none w-full flex justify-center select-none relative">

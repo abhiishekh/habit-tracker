@@ -41,6 +41,7 @@ export default function CodingPage() {
         try {
             const res = await fetch("/api/wakatime");
             const data = await res.json();
+            console.log("lkasdfjaksfj ", data)
             setStats(data);
         } catch (e) {
             console.error(e);
@@ -123,7 +124,7 @@ export default function CodingPage() {
     };
 
     return (
-        <div className="max-w-6xl mx-auto pb-20 px-6">
+        <div className="">
             <div className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl md:text-5xl font-black tracking-tighter text-slate-900 dark:text-white mb-2 italic uppercase">

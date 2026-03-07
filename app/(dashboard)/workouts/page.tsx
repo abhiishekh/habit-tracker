@@ -39,7 +39,7 @@ export default function WorkoutHub() {
     }
 
     return (
-        <div className="container max-w-6xl py-10 space-y-10">
+        <div className=" space-y-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="space-y-2">
                     <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-indigo-500 bg-clip-text text-transparent">

@@ -16,8 +16,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
-import { Loader2, Sparkles, Code } from "lucide-react"
-import ReactMarkdown from "react-markdown"
+import { useRouter } from "next/navigation"
+import { Loader2, Code } from "lucide-react"
 import {
     Select,
     SelectContent,
@@ -25,7 +25,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { ProjectPlanView } from "./ProjectPlanView"
 
 const formSchema = z.object({
     projectDescription: z.string().min(20, "Please describe the project in at least 20 characters."),
@@ -39,6 +38,7 @@ type FormValues = z.infer<typeof formSchema>
 export function ProjectBlueprintForm() {
     const [isLoading, setIsLoading] = useState(false)
     const [planData, setPlanData] = useState<any>(null)
+    const router = useRouter()
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema) as any,
@@ -68,8 +68,8 @@ export function ProjectBlueprintForm() {
                 body: JSON.stringify(payload),
             })
             const data = await response.json()
-            if (data.success) {
-                setPlanData(data)
+            if (data.success && data.projectId) {
+                router.push(`/blueprint/project/${data.projectId}`)
             } else {
                 console.error("Failed to generate:", data);
                 setPlanData(data)
@@ -176,31 +176,18 @@ export function ProjectBlueprintForm() {
                     </form>
                 </Form>
             ) : (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="p-4 bg-violet-500/10 border border-violet-500/20 text-violet-600 rounded-lg text-sm space-y-3">
-                        <div className="flex items-start gap-2">
-                            <Sparkles className="w-5 h-5 mt-0.5" />
-                            <div>
-                                <span className="font-bold block">Architect Note:</span>
-                                <div className="prose prose-sm dark:prose-invert max-w-none text-violet-700 dark:text-violet-400">
-                                    <ReactMarkdown>
-                                        {planData.message || "Project Plan parsed and scoped successfully!"}
-                                    </ReactMarkdown>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {planData.projectId ? (
-                        <ProjectPlanView planId={planData.projectId} />
-                    ) : (
-                        <div className="p-6 bg-card border rounded-xl text-center">
-                            <p className="text-muted-foreground">The data was successfully returned from the agent, but no Project ID was generated.</p>
-                            <pre className="text-left mt-4 text-xs overflow-auto max-h-64 p-4 bg-muted rounded-md border">
-                                {JSON.stringify(planData, null, 2)}
-                            </pre>
-                        </div>
-                    )}
+                // planData only set on error (success redirects away)
+                <div className="p-6 bg-destructive/10 border border-destructive/20 rounded-xl text-center space-y-4">
+                    <p className="text-destructive font-semibold">Something went wrong generating your plan.</p>
+                    <pre className="text-left text-xs overflow-auto max-h-64 p-4 bg-muted rounded-md border">
+                        {JSON.stringify(planData, null, 2)}
+                    </pre>
+                    <button
+                        onClick={() => setPlanData(null)}
+                        className="text-sm underline text-muted-foreground hover:text-foreground"
+                    >
+                        Try again
+                    </button>
                 </div>
             )
             }

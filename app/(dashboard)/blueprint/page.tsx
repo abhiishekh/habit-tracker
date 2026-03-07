@@ -1,8 +1,24 @@
+"use client"
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Bot, BriefcaseBusiness, Code, Dumbbell, Sparkles, TrendingUp, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+    ArrowRight,
+    Bot,
+    BriefcaseBusiness,
+    Code,
+    Dumbbell,
+    Loader2,
+    Sparkles,
+    TrendingUp,
+    Wallet,
+    PlusCircle,
+    CalendarDays,
+} from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 const agents = [
     {
@@ -43,9 +59,34 @@ const agents = [
     },
 ];
 
+const blueprintTypeConfig: Record<string, { icon: any; color: string; badgeColor: string; label: string }> = {
+    Income: { icon: Wallet, color: "text-emerald-500", badgeColor: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20", label: "Financial" },
+    Project: { icon: Code, color: "text-violet-500", badgeColor: "bg-violet-500/10 text-violet-600 border-violet-500/20", label: "Project" },
+    Career: { icon: BriefcaseBusiness, color: "text-amber-500", badgeColor: "bg-amber-500/10 text-amber-600 border-amber-500/20", label: "Career" },
+    Gym: { icon: Dumbbell, color: "text-cyan-500", badgeColor: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20", label: "Fitness" },
+};
+
 export default function BlueprintHubPage() {
+    const [activeBlueprints, setActiveBlueprints] = useState<any[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        const fetch_ = async () => {
+            try {
+                const res = await fetch('/api/dashboard/active-blueprints')
+                const data = await res.json()
+                if (data.success) setActiveBlueprints(data.blueprints)
+            } catch (err) {
+                console.error("Failed to fetch active blueprints:", err)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetch_()
+    }, [])
+
     return (
-        <div className="max-w-5xl mx-auto py-10 px-6 space-y-12">
+        <div className="space-y-12">
             {/* Header Section */}
             <div className="text-center space-y-4">
                 <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight flex items-center justify-center gap-3">
@@ -100,15 +141,78 @@ export default function BlueprintHubPage() {
                 })}
             </div>
 
-            {/* Placeholder for "Active Blueprints" section at the bottom */}
-            <div className="pt-16 border-t border-border/50">
+            {/* Active Blueprints Section */}
+            <div className="pt-8 border-t border-border/50">
                 <h3 className="text-xl font-bold flex items-center gap-2 mb-6">
                     <TrendingUp className="w-6 h-6 text-muted-foreground" />
                     Your Active Blueprints
                 </h3>
-                <div className="text-center p-12 bg-primary/5 rounded-2xl border border-primary/10 border-dashed">
-                    <p className="text-muted-foreground">You don't have any active blueprints yet. Generate one above to get started!</p>
-                </div>
+
+                {isLoading ? (
+                    <div className="flex items-center justify-center p-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : activeBlueprints.length === 0 ? (
+                    <div className="text-center p-12 bg-primary/5 rounded-2xl border border-primary/10 border-dashed">
+                        <p className="text-muted-foreground">You don't have any active blueprints yet. Generate one above to get started!</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {activeBlueprints.map((bp, i) => {
+                            const config = blueprintTypeConfig[bp.type] || blueprintTypeConfig["Gym"];
+                            const Icon = config.icon;
+                            return (
+                                <motion.div
+                                    key={bp.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.08 }}
+                                >
+                                    <Link href={bp.link}>
+                                        <Card className="group hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer border-border/50 h-full">
+                                            <CardContent className="p-5 space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div className={`p-2 rounded-xl border ${config.badgeColor}`}>
+                                                        <Icon className="w-4 h-4" />
+                                                    </div>
+                                                    <Badge variant="outline" className={`text-[10px] border ${config.badgeColor}`}>
+                                                        {config.label}
+                                                    </Badge>
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-sm leading-tight line-clamp-2">{bp.title}</p>
+                                                </div>
+                                                <div className="pt-2 border-t border-border/40 flex items-center justify-between">
+                                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                                        <CalendarDays className="w-3 h-3" />
+                                                        View plan
+                                                    </span>
+                                                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </Link>
+                                </motion.div>
+                            )
+                        })}
+
+                        {/* Add new blueprint button */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: activeBlueprints.length * 0.08 }}
+                        >
+                            <Link href="#agents">
+                                <Card className="group hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer border-dashed border-border h-full">
+                                    <CardContent className="p-5 flex flex-col items-center justify-center h-full min-h-[120px] gap-3 text-muted-foreground">
+                                        <PlusCircle className="w-6 h-6 group-hover:text-primary transition-colors" />
+                                        <p className="text-xs font-medium text-center group-hover:text-primary transition-colors">New Blueprint</p>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                        </motion.div>
+                    </div>
+                )}
             </div>
         </div>
     );

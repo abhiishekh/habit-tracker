@@ -1,10 +1,9 @@
 "use client"
 
-import { Code2, Dumbbell, Flame, InfoIcon, LayoutDashboard, List, Menu, Sparkles, X } from 'lucide-react';
+import { Code2, Dumbbell, Flame, InfoIcon, LayoutDashboard, List, Bot } from 'lucide-react';
 import { usePathname } from 'next/navigation'
-import React, { useState } from 'react'
+import React from 'react'
 import clsx from 'clsx'
-import NavItem from '@/components/shared/navItems';
 import Link from 'next/link';
 
 const navItems = [
@@ -13,51 +12,68 @@ const navItems = [
     { name: "Habits", href: "/habits", icon: Flame },
     { name: "Todos", href: "/todos", icon: List },
     { name: "Insights", href: "/insights", icon: InfoIcon },
-    { name: "Coding & Work", href: "/coding", icon: Code2 },
+    { name: "Coding", href: "/coding", icon: Code2 },
+    { name: "Blueprint", href: "/blueprint", icon: Bot },
 ];
 
 const DashboardSidebar = () => {
     const pathname = usePathname()
-    const [isExpanded, setIsExpanded] = useState(false)
 
     return (
-        <aside className={clsx(
-            "fixed left-0 top-16 z-40 h-[calc(100vh-64px)] border-r border-slate-200 bg-white transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-950 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar",
-            // Mobile width vs Desktop width
-            isExpanded ? "w-64 px-4 py-6" : "w-16 px-2 py-6 md:w-64 md:px-4"
-        )}>
+        <>
+            {/* ── DESKTOP SIDEBAR (lg+) ─────────────────────────────────────── */}
+            <aside className="hidden lg:flex fixed left-0 h-[calc(100vh-64px)] w-64 border-r border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 flex-col overflow-y-auto overflow-x-hidden custom-scrollbar px-4 py-6">
+                <nav className="space-y-1 flex-1 mt-4">
+                    {navItems.map((item) => {
+                        const Icon = item.icon;
+                        const active = pathname === item.href || pathname.startsWith(item.href + '/');
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={clsx(
+                                    "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
+                                    active
+                                        ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
+                                        : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-zinc-900"
+                                )}
+                            >
+                                <Icon size={20} className="shrink-0" />
+                                <span>{item.name}</span>
+                            </Link>
+                        )
+                    })}
+                </nav>
+            </aside>
 
-
-
-            {/* 2. Mobile Toggle Button - Pushed down */}
-            <div className={clsx(
-                "mt-8 mb-2 flex md:hidden items-center",
-                isExpanded ? "justify-end px-2" : "justify-center"
-            )}>
-                <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white transition-all"
-                >
-                    {isExpanded ? <X size={20} /> : <Menu size={20} />}
-                </button>
-            </div>
-
-            {/* 3. Navigation Links - Pushed down to align nicely */}
-            {/* On desktop (where the menu toggle is hidden), we add mt-8 to maintain the same spacing */}
-            <nav className="space-y-2 flex-1 md:mt-10">
-                {navItems.map((item) => (
-                    <NavItem
-                        key={item.href}
-                        href={item.href}
-                        label={item.name}
-                        icon={item.icon}
-                        active={pathname === item.href}
-                        isExpanded={isExpanded}
-                        onClick={() => setIsExpanded(false)}
-                    />
-                ))}
+            {/* ── MOBILE / TABLET BOTTOM NAV (< lg) ────────────────────────── */}
+            <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-zinc-950 border-t border-slate-200 dark:border-zinc-800 flex items-stretch h-16 safe-bottom">
+                {navItems.slice(0, 6).map((item) => {
+                    const Icon = item.icon;
+                    const active = pathname === item.href || pathname.startsWith(item.href + '/');
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={clsx(
+                                "flex flex-col items-center justify-center flex-1 gap-0.5 py-2 text-[10px] font-medium transition-all",
+                                active
+                                    ? "text-indigo-600 dark:text-indigo-400"
+                                    : "text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                            )}
+                        >
+                            <div className={clsx(
+                                "w-8 h-6 rounded-xl flex items-center justify-center transition-all",
+                                active ? "bg-indigo-50 dark:bg-indigo-500/10" : ""
+                            )}>
+                                <Icon size={18} className="shrink-0" />
+                            </div>
+                            <span className="leading-none">{item.name === "Coding" ? "Code" : item.name}</span>
+                        </Link>
+                    )
+                })}
             </nav>
-        </aside>
+        </>
     )
 }
 

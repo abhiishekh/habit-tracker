@@ -23,9 +23,9 @@ export async function GET() {
         const activeBlueprints = [];
 
         if (gym) activeBlueprints.push({ type: 'Gym', title: gym.goal, id: gym.id, link: '/workouts', icon: 'Dumbbell', color: 'text-cyan-500' });
-        if (income) activeBlueprints.push({ type: 'Income', title: income.goal.substring(0, 50) + "...", id: income.id, link: `/blueprint/income/new?id=${income.id}`, icon: 'Wallet', color: 'text-emerald-500' });
-        if (project) activeBlueprints.push({ type: 'Project', title: project.projectName, id: project.id, link: `/blueprint/project/new?id=${project.id}`, icon: 'Code', color: 'text-violet-500' });
-        if (career) activeBlueprints.push({ type: 'Career', title: `${career.currentRole} -> ${career.targetRole}`, id: career.id, link: `/blueprint/career/new?id=${career.id}`, icon: 'BriefcaseBusiness', color: 'text-amber-500' });
+        if (income) activeBlueprints.push({ type: 'Income', title: income.goal.substring(0, 50) + "...", id: income.id, link: `/blueprint/income/${income.id}`, icon: 'Wallet', color: 'text-emerald-500' });
+        if (project) activeBlueprints.push({ type: 'Project', title: project.projectName, id: project.id, link: `/blueprint/project/${project.id}`, icon: 'Code', color: 'text-violet-500' });
+        if (career) activeBlueprints.push({ type: 'Career', title: `${career.currentRole} -> ${career.targetRole}`, id: career.id, link: `/blueprint/career/${career.id}`, icon: 'BriefcaseBusiness', color: 'text-amber-500' });
 
         return NextResponse.json({ success: true, blueprints: activeBlueprints });
     } catch (error: any) {

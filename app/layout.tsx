@@ -50,7 +50,7 @@ export default function RootLayout({
           <Providers>
             <div className="flex flex-col min-h-screen bg-white dark:bg-[#09090B] transition-colors duration-300">
               <Nav />
-              <main className="flex-1 w-full ">
+              <main className="flex-1 w-full mt-16">
                 {children}
                 <Toaster richColors position="bottom-right" />
               </main>
