@@ -19,16 +19,21 @@ User Context : ${JSON.stringify(context || {})}
 Current Date : ${new Date().toLocaleDateString()}
 
 MISSION:
-1. Design a comprehensive networking strategy to achieve the user's goal.
-2. Identify high-value target audiences (people, roles, industries).
-3. Create a step-by-step weekly outreach plan for 4 weeks.
-4. Provide specific guidance on outreach scripts, follow-up protocols, and platform optimization.
-5. Set measurable weekly targets (e.g., 10 new connections, 2 coffee chats).
+1. Design a comprehensive networking strategy
+2. Structure it as a 4-WEEK plan with daily actionable TASKS
+3. Cover outreach, follow-ups, platform optimization, and events
+
+OUTPUT STRUCTURE:
+You MUST call 'save_networking_plan' with this structure:
+- goal (string), strategy (optional)
+- weeks: array of { weekNumber, focus, tasks: [{ dayNumber, title, description, platform }] }
+- Each week should have 5-7 tasks
+- platform options: "LinkedIn", "Twitter", "Email", "Events", "Other"
 
 RULES:
-- Be AGGRESSIVE and PRACTICAL — suggest direct outreach methods, not just "be active on social media".
-- Outreach scripts must be high-conversion and personalized.
-- Tasks must be daily or multi-day actions.
+- Be AGGRESSIVE and PRACTICAL — suggest direct outreach methods
+- Include outreach scripts and follow-up protocols
+- Tasks must be daily actions with measurable outcomes
 
 CRITICAL: You MUST call 'save_networking_plan' to finalise.
 Responding with text only will NOT save anything.`;
@@ -38,20 +43,42 @@ Responding with text only will NOT save anything.`;
         new HumanMessage("Create my master networking plan to reach my goals.")
     ];
 
+    let totalTokensUsed = 0;
+    let totalRequests = 0;
+    const MAX_ITERATIONS = 5;
+    let iterations = 0;
+
     try {
-        while (true) {
+        while (iterations < MAX_ITERATIONS) {
+            iterations++;
+            totalRequests++;
+
+            const startTime = Date.now();
             const response = await invokeWithFallback(tools, messages);
+            const endTime = Date.now();
+
+            const usageMetadata = response?.response_metadata?.usage_metadata;
+            const tokensThisRequest = (usageMetadata as any)?.total_tokens || 0;
+            totalTokensUsed += tokensThisRequest;
+
+            console.log(`[Networking Architect] API Request ${totalRequests} successful. Took ${endTime - startTime}ms. Tokens: ${tokensThisRequest} (Total Session: ${totalTokensUsed})`);
+
             messages.push(response);
 
-            console.log("[Networking Agent] tool_calls:", response.tool_calls?.length ?? 0);
-
             if (!response.tool_calls || response.tool_calls.length === 0) {
-                console.warn("[Networking Agent] No tool call — returning text response.");
+                const content = typeof response.content === "string" ? response.content : "";
+                if (content.toLowerCase().includes("week") || content.toLowerCase().includes("outreach")) {
+                    return {
+                        success: true,
+                        message: content,
+                        isMarkdownPlan: true,
+                        stats: { totalRequests, totalTokensUsed }
+                    };
+                }
                 return {
                     success: false,
-                    message: typeof response.content === "string"
-                        ? response.content
-                        : "Networking plan could not be generated. Please try again.",
+                    message: content || "Networking plan could not be generated.",
+                    stats: { totalRequests, totalTokensUsed }
                 };
             }
 
@@ -60,7 +87,6 @@ Responding with text only will NOT save anything.`;
                 if (!tool) continue;
 
                 try {
-                    console.log(`[Networking Agent] Executing tool: ${toolCall.name}`);
                     const output = await (tool as any).invoke(toolCall.args);
                     const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
@@ -72,10 +98,9 @@ Responding with text only will NOT save anything.`;
                     if (toolCall.name === "save_networking_plan") {
                         try {
                             const parsed = JSON.parse(outputStr);
-                            console.log("[Networking Agent] ✅ Plan saved. ID:", parsed.planId);
-                            return { ...parsed, success: true };
+                            return { ...parsed, success: true, stats: { totalRequests, totalTokensUsed } };
                         } catch {
-                            return { success: true, message: outputStr };
+                            return { success: true, message: outputStr, stats: { totalRequests, totalTokensUsed } };
                         }
                     }
 
@@ -88,7 +113,6 @@ Responding with text only will NOT save anything.`;
                 }
             }
         }
-
     } catch (error) {
         console.error("[Networking Agent] Critical error:", error);
         return {
@@ -97,4 +121,10 @@ Responding with text only will NOT save anything.`;
             error: String(error),
         };
     }
+
+    return {
+        success: false,
+        message: "Max iterations reached without finalizing networking plan.",
+        stats: { totalRequests, totalTokensUsed }
+    };
 }

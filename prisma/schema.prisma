@@ -401,33 +401,49 @@ model AgentMemory {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ─── LIFE ─────────────────────────────────────────────────────
 model LifePlan {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String   @db.ObjectId
-  title       String
-  description String
-  domains     String[] // career, fitness, finance, mindset
-  startDate   DateTime
+  goal        String
+  strategy    String?
+  startDate   DateTime @default(now())
   endDate     DateTime
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lifeTasks LifeTask[]
+  weeks LifeWeek[]
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LifeWeek {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId     String   @db.ObjectId
+  weekNumber Int
+  focus      String
+  createdAt  DateTime @default(now())
+
+  tasks LifeTask[]
+  plan  LifePlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model LifeTask {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  planId      String  @db.ObjectId
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  weekId      String    @db.ObjectId
+  dayNumber   Int?
   title       String
   description String
-  domain      String
-  dayNumber   Int
-  completed   Boolean @default(false)
+  domain      String?
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
 
-  plan LifePlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  week LifeWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
 }
 
+// ─── BUSINESS ─────────────────────────────────────────────────
 model BusinessPlan {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   userId       String   @db.ObjectId
@@ -435,131 +451,287 @@ model BusinessPlan {
   idea         String
   targetMarket String
   revenueModel String
-  validation   String[] // market validation steps
-  risks        String[] // top risks + mitigation
-  roadmap      String[] // high-level 30-day milestones
-  milestones   String[] // JSON stringified {day, task, outcome}[]
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weeks BusinessWeek[]
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model BusinessWeek {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId     String   @db.ObjectId
+  weekNumber Int
+  focus      String
+  createdAt  DateTime @default(now())
+
+  tasks BusinessTask[]
+  plan  BusinessPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model BusinessTask {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  weekId      String    @db.ObjectId
+  dayNumber   Int?
+  title       String
+  description String
+  type        String?   // "validation" | "marketing" | "product" | "operations"
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+
+  week BusinessWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+}
+
+// ─── HEALTH ───────────────────────────────────────────────────
 model HealthPlan {
-  id               String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId           String   @db.ObjectId
-  goal             String
-  nutrition        String[]
-  sleepTips        String[]
-  stressManagement String[]
-  weeklySchedule   String[]
-  supplements      String[]
-  hydration        String?
-  weeklyGoals      String[]
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  goal      String
+  strategy  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weeks HealthWeek[]
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model HealthWeek {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId     String   @db.ObjectId
+  weekNumber Int
+  focus      String
+  createdAt  DateTime @default(now())
+
+  tasks HealthTask[]
+  plan  HealthPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model HealthTask {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  weekId      String    @db.ObjectId
+  dayNumber   Int?
+  title       String
+  description String
+  category    String?   // "nutrition" | "sleep" | "exercise" | "stress" | "hydration"
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+
+  week HealthWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+}
+
+// ─── LEARNING ─────────────────────────────────────────────────
 model LearningPlan {
-  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId              String   @db.ObjectId
-  goal                String
-  skills              String[]
-  resources           String[]
-  weeklyPlan          String[]
-  totalWeeks          Int      @default(4)
-  dailyTimeCommitment String?
-  checkpoints         String[]
-  capstoneProject     String?
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model MindsetPlan {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String   @db.ObjectId
-  goal              String
-  limitingBeliefs   String[]
-  habits            String[]
-  exercises         String[]
-  affirmations      String[]
-  journalingPrompts String[]
-  emergencyProtocol String?
-  cbtTechnique      String?
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model ProductivityPlan {
-  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId              String   @db.ObjectId
-  goal                String
-  dailySchedule       String[]
-  focusMethods        String[]
-  taskSystem          String[]
-  morningRoutine      String[]
-  eveningRoutine      String[]
-  weeklyReview        String?
-  productivityKillers String[]
-  tools               String[]
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model RelationshipPlan {
-  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId               String   @db.ObjectId
-  goal                 String
-  communicationTips    String[]
-  habits               String[]
-  activities           String[]
-  conflictResolution   String[]
-  empathyExercises     String[]
-  conversationStarters String[]
-  thirtyDayPlan        String[]
-  isActive             Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-
-
-model NetworkingPlan {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   userId          String   @db.ObjectId
   goal            String
-  targetAudience  String[]
-  outreachStrategy String
-  platforms       String[]
-  startDate       DateTime
-  endDate         DateTime
+  strategy        String?
+  capstoneProject String?
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weeks LearningWeek[]
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model LearningWeek {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId     String   @db.ObjectId
+  weekNumber Int
+  focus      String
+  createdAt  DateTime @default(now())
+
+  tasks LearningTask[]
+  plan  LearningPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model LearningTask {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  weekId      String    @db.ObjectId
+  dayNumber   Int?
+  title       String
+  description String
+  resource    String?   // specific course, tutorial, or book reference
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+
+  week LearningWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+}
+
+// ─── MINDSET ──────────────────────────────────────────────────
+model MindsetPlan {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  goal      String
+  strategy  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  weeks MindsetWeek[]
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MindsetWeek {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId     String   @db.ObjectId
+  weekNumber Int
+  focus      String
+  createdAt  DateTime @default(now())
+
+  tasks MindsetTask[]
+  plan  MindsetPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model MindsetTask {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  weekId      String    @db.ObjectId
+  dayNumber   Int?
+  title       String
+  description String
+  type        String?   // "habit" | "exercise" | "journaling" | "affirmation"
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+
+  week MindsetWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+}
+
+// ─── PRODUCTIVITY ─────────────────────────────────────────────
+model ProductivityPlan {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  goal      String
+  strategy  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  weeks ProductivityWeek[]
+  user  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProductivityWeek {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId     String   @db.ObjectId
+  weekNumber Int
+  focus      String
+  createdAt  DateTime @default(now())
+
+  tasks ProductivityTask[]
+  plan  ProductivityPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model ProductivityTask {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  weekId      String    @db.ObjectId
+  dayNumber   Int?
+  title       String
+  description String
+  type        String?   // "routine" | "focus" | "review" | "system"
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+
+  week ProductivityWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+}
+
+// ─── RELATIONSHIPS ────────────────────────────────────────────
+model RelationshipPlan {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  goal      String
+  strategy  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  weeks RelationshipWeek[]
+  user  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RelationshipWeek {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId     String   @db.ObjectId
+  weekNumber Int
+  focus      String
+  createdAt  DateTime @default(now())
+
+  tasks RelationshipTask[]
+  plan  RelationshipPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model RelationshipTask {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  weekId      String    @db.ObjectId
+  dayNumber   Int?
+  title       String
+  description String
+  type        String?   // "communication" | "activity" | "habit" | "conflict"
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+
+  week RelationshipWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+}
+
+// ─── NETWORKING ───────────────────────────────────────────────
+model NetworkingPlan {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  goal      String
+  strategy  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  weeks NetworkingWeek[]
+  user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NetworkingWeek {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId     String   @db.ObjectId
+  weekNumber Int
+  focus      String
+  createdAt  DateTime @default(now())
+
+  tasks NetworkingTask[]
+  plan  NetworkingPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model NetworkingTask {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  weekId      String    @db.ObjectId
+  dayNumber   Int?
+  title       String
+  description String
+  platform    String?   // "LinkedIn" | "Twitter" | "Email" | "Events"
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  deadline    DateTime?
+  createdAt   DateTime  @default(now())
+
+  week NetworkingWeek @relation(fields: [weekId], references: [id], onDelete: Cascade)
+}
+
+// ─── UNIFIED BLUEPRINT TASK (for cross-domain dashboard) ──────
 model BlueprintTask {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId
   userId          String    @db.ObjectId
   planId          String    @db.ObjectId
-  planType        String    // "income" | "project" | "career" | "gym" | "health" | "business" | "learning" | "mindset" | "productivity" | "relationships" | "life" | "networking"
+  planType        String
   weekNumber      Int
   dayNumber       Int?
   title           String

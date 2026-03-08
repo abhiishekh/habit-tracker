@@ -15,30 +15,25 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Code } from "lucide-react"
+import { Sparkles, Layout, Code2, Clock } from "lucide-react"
 import { UflLoaderInline } from "@/components/ui/ufl-loader"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
+import { motion } from "framer-motion"
 
 const formSchema = z.object({
-    projectDescription: z.string().min(20, "Please describe the project in at least 20 characters."),
-    techStack: z.string().min(2, "List your preferred stack or 'Any'"),
-    experience: z.enum(["Beginner", "Intermediate", "Advanced"]),
-    hoursPerDay: z.coerce.number().min(1, "Must commit at least 1 hour").max(16),
+    projectDescription: z.string().min(20, "Please describe your project in more detail."),
+    techStack: z.string().min(2, "What technologies would you like to use?"),
+    experience: z.enum(["beginner", "intermediate", "advanced"]),
+    hoursPerDay: z.coerce.number().min(1).max(24),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
 export function ProjectBlueprintForm() {
     const [isLoading, setIsLoading] = useState(false)
-    const [planData, setPlanData] = useState<any>(null)
+    const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
     const form = useForm<FormValues>({
@@ -46,20 +41,21 @@ export function ProjectBlueprintForm() {
         defaultValues: {
             projectDescription: "",
             techStack: "",
-            experience: "Intermediate",
+            experience: "intermediate",
             hoursPerDay: 4,
         },
     })
 
     async function onSubmit(values: FormValues) {
         setIsLoading(true)
+        setError(null)
         try {
             const payload = {
-                userGoal: values.projectDescription,
+                projectDescription: values.projectDescription,
                 context: {
                     techStack: values.techStack,
                     experience: values.experience,
-                    hoursPerDay: values.hoursPerDay
+                    hoursPerDay: values.hoursPerDay,
                 }
             };
 
@@ -69,30 +65,38 @@ export function ProjectBlueprintForm() {
                 body: JSON.stringify(payload),
             })
             const data = await response.json()
-            if (data.success && data.projectId) {
-                router.push(`/blueprint/project/${data.projectId}`)
+            if (data.success && data.planId) {
+                router.push(`/blueprint/project/${data.planId}`)
             } else {
-                console.error("Failed to generate:", data);
-                setPlanData(data)
+                setError(data.message || "Project Architect encountered an error.")
             }
         } catch (error) {
-            console.error("Agent failed:", error)
+            console.error("Project Agent failed:", error)
+            setError("Connection error. Please try again.")
         } finally {
             setIsLoading(false)
         }
     }
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-card rounded-xl border shadow-sm">
-            <div className="mb-8 space-y-2">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <Code className="text-violet-500 w-6 h-6" />
-                    Project Architect AI
-                </h2>
-                <p className="text-muted-foreground">Transform your app idea into a structured technical roadmap with daily coding deliverables.</p>
-            </div>
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-3xl mx-auto p-1 bg-gradient-to-br from-blue-600/20 via-border to-blue-600/10 rounded-3xl"
+        >
+            <div className="bg-card p-8 md:p-10 rounded-[1.4rem] shadow-2xl space-y-10">
+                <div className="flex flex-col md:flex-row md:items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-blue-600/10 text-blue-600 shadow-inner">
+                        <Layout className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-extrabold tracking-tight font-heading">Project Architect AI</h2>
+                        <p className="text-muted-foreground text-lg leading-relaxed">Senior Project Manager. Engineering timelines for your shipping success.</p>
+                    </div>
+                </div>
 
-            {!planData ? (
+                <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <FormField
@@ -100,53 +104,32 @@ export function ProjectBlueprintForm() {
                             name="projectDescription"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>App/Project Description</FormLabel>
+                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Project Vision & Scope</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="e.g. A SaaS app for dog walkers to manage schedules, track payments, and send photos to owners."
-                                            className="min-h-[120px]"
+                                            placeholder="What are you building? List core features and the main problem it solves..."
+                                            className="min-h-[120px] bg-muted/20 border-border/50 focus:border-blue-600/50 rounded-xl"
                                             {...field}
                                         />
                                     </FormControl>
-                                    <FormDescription>The more detailed your description, the more granular the resulting daily tasks will be.</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
 
-                        <FormField
-                            control={form.control}
-                            name="techStack"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Preferred Tech Stack</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g. Next.js, Tailwind, Prisma, PostgreSQL" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
-                                name="experience"
+                                name="techStack"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Experience Level</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select level" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="Beginner">Beginner</SelectItem>
-                                                <SelectItem value="Intermediate">Intermediate</SelectItem>
-                                                <SelectItem value="Advanced">Advanced</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Code2 className="w-3.5 h-3.5 text-muted-foreground" />
+                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Preferred Tech Stack</FormLabel>
+                                        </div>
+                                        <FormControl>
+                                            <Input placeholder="e.g. Next.js, FastAPI, Prisma, Tailwind" className="h-12 bg-muted/20 border-border/50 focus:border-blue-600/50 rounded-xl" {...field} />
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -156,9 +139,12 @@ export function ProjectBlueprintForm() {
                                 name="hoursPerDay"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Hours Available Per Day</FormLabel>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Hours per Day</FormLabel>
+                                        </div>
                                         <FormControl>
-                                            <Input type="number" {...field} />
+                                            <Input type="number" className="h-12 bg-muted/20 border-border/50 focus:border-blue-600/50 rounded-xl" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -166,32 +152,48 @@ export function ProjectBlueprintForm() {
                             />
                         </div>
 
+                        <FormField
+                            control={form.control}
+                            name="experience"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Developer Experience</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger className="h-12 bg-muted/20 border-border/50 focus:border-blue-600/50 rounded-xl">
+                                                <SelectValue placeholder="Select level" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="beginner">Beginner / Learner</SelectItem>
+                                            <SelectItem value="intermediate">Intermediate / Capable</SelectItem>
+                                            <SelectItem value="advanced">Advanced / Pro</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-                        <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white" disabled={isLoading}>
+                        {error && (
+                            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-center text-destructive text-sm font-semibold">
+                                {error}
+                            </div>
+                        )}
+
+                        <Button type="submit" className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-lg shadow-blue-600/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Project...</>
+                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Engineering Plan...</>
                             ) : (
-                                "Generate Project Roadmap"
+                                <span className="flex items-center gap-2">
+                                    <Sparkles className="w-5 h-5" />
+                                    Generate Project Blueprint
+                                </span>
                             )}
                         </Button>
                     </form>
                 </Form>
-            ) : (
-                // planData only set on error (success redirects away)
-                <div className="p-6 bg-destructive/10 border border-destructive/20 rounded-xl text-center space-y-4">
-                    <p className="text-destructive font-semibold">Something went wrong generating your plan.</p>
-                    <pre className="text-left text-xs overflow-auto max-h-64 p-4 bg-muted rounded-md border">
-                        {JSON.stringify(planData, null, 2)}
-                    </pre>
-                    <button
-                        onClick={() => setPlanData(null)}
-                        className="text-sm underline text-muted-foreground hover:text-foreground"
-                    >
-                        Try again
-                    </button>
-                </div>
-            )
-            }
-        </div >
+            </div>
+        </motion.div>
     )
 }

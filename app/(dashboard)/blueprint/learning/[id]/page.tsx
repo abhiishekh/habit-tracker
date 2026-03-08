@@ -1,7 +1,6 @@
 "use client"
 
-import React from "react"
-import { BlueprintTaskView } from "@/components/blueprint/BlueprintTaskView"
+import { PlanView } from "@/components/blueprint/PlanView"
 import { ArrowLeft, GraduationCap } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
@@ -25,7 +24,7 @@ export default function LearningPlanDetailPage() {
                     LEARNING MENTOR
                 </div>
             </div>
-            <BlueprintTaskView planId={id} />
+            <PlanView planId={id} domain="learning" accentColor="orange" icon={GraduationCap} title="Learning Mentor" />
         </div>
     )
 }

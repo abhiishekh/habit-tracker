@@ -17,20 +17,20 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Sparkles, Wallet, HandCoins, TrendingUp } from "lucide-react"
+import { Sparkles, LifeBuoy, Map } from "lucide-react"
 import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import { motion } from "framer-motion"
 
 const formSchema = z.object({
-    goal: z.string().min(10, "Tell us more about your income goal."),
-    profession: z.string().min(2, "Profession is required."),
-    skills: z.string().min(2, "List at least one skill."),
-    currentIncome: z.coerce.number().min(0),
+    goal: z.string().min(10, "Tell us more about your life goal."),
+    currentStatus: z.string().min(10, "Please describe your current situation."),
+    priority: z.string().min(2, "What is your top priority for change?"),
+    timeframe: z.string().min(2, "e.g. 30 days, 6 months"),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
-export function IncomeBlueprintForm() {
+export function LifeBlueprintForm() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
@@ -39,9 +39,9 @@ export function IncomeBlueprintForm() {
         resolver: zodResolver(formSchema) as any,
         defaultValues: {
             goal: "",
-            profession: "",
-            skills: "",
-            currentIncome: 0,
+            currentStatus: "",
+            priority: "",
+            timeframe: "30 days",
         },
     })
 
@@ -52,25 +52,25 @@ export function IncomeBlueprintForm() {
             const payload = {
                 userGoal: values.goal,
                 context: {
-                    profession: values.profession,
-                    skills: values.skills.split(',').map(s => s.trim()),
-                    currentIncome: values.currentIncome
+                    currentStatus: values.currentStatus,
+                    priority: values.priority,
+                    timeframe: values.timeframe,
                 }
             };
 
-            const response = await fetch("/api/agents/income", {
+            const response = await fetch("/api/agents/life", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             })
             const data = await response.json()
             if (data.success && data.planId) {
-                router.push(`/blueprint/income/${data.planId}`)
+                router.push(`/blueprint/life/${data.planId}`)
             } else {
-                setError(data.message || "Financial Strategist encountered an error.")
+                setError(data.message || "Life Architect encountered an error.")
             }
         } catch (error) {
-            console.error("Income Agent failed:", error)
+            console.error("Life Agent failed:", error)
             setError("Connection error. Please try again.")
         } finally {
             setIsLoading(false)
@@ -81,16 +81,16 @@ export function IncomeBlueprintForm() {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl mx-auto p-1 bg-gradient-to-br from-emerald-600/20 via-border to-emerald-600/10 rounded-3xl"
+            className="max-w-3xl mx-auto p-1 bg-gradient-to-br from-indigo-600/20 via-border to-indigo-600/10 rounded-3xl"
         >
             <div className="bg-card p-8 md:p-10 rounded-[1.4rem] shadow-2xl space-y-10">
                 <div className="flex flex-col md:flex-row md:items-center gap-6">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-emerald-600/10 text-emerald-600 shadow-inner">
-                        <Wallet className="w-8 h-8" />
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-indigo-600/10 text-indigo-600 shadow-inner">
+                        <LifeBuoy className="w-8 h-8" />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-extrabold tracking-tight font-heading">Financial Strategist AI</h2>
-                        <p className="text-muted-foreground text-lg leading-relaxed">Expert 30-day income generation programming based on your skills and profession.</p>
+                        <h2 className="text-3xl font-extrabold tracking-tight font-heading">Life Architect AI</h2>
+                        <p className="text-muted-foreground text-lg leading-relaxed">The ultimate holistic planning engine. Designing every dimension of your future.</p>
                     </div>
                 </div>
 
@@ -98,18 +98,33 @@ export function IncomeBlueprintForm() {
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="currentStatus"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Current Life Status</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Describe your current situation (Career, Health, Relationships)..."
+                                            className="min-h-[100px] bg-muted/20 border-border/50 focus:border-indigo-600/50 rounded-xl"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
-                                name="profession"
+                                name="priority"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <HandCoins className="w-3.5 h-3.5 text-muted-foreground" />
-                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Profession</FormLabel>
-                                        </div>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Top Priority</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="e.g. Software Engineer" className="h-12 bg-muted/20 border-border/50 focus:border-emerald-600/50 rounded-xl" {...field} />
+                                            <Input placeholder="e.g. Work-life balance, health transition" className="h-12 bg-muted/20 border-border/50 focus:border-indigo-600/50 rounded-xl" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -117,15 +132,12 @@ export function IncomeBlueprintForm() {
                             />
                             <FormField
                                 control={form.control}
-                                name="currentIncome"
+                                name="timeframe"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
-                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Monthly Income</FormLabel>
-                                        </div>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Timeframe</FormLabel>
                                         <FormControl>
-                                            <Input type="number" className="h-12 bg-muted/20 border-border/50 focus:border-emerald-600/50 rounded-xl" {...field} />
+                                            <Input placeholder="e.g. 30 days, 90 days" className="h-12 bg-muted/20 border-border/50 focus:border-indigo-600/50 rounded-xl" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -135,31 +147,17 @@ export function IncomeBlueprintForm() {
 
                         <FormField
                             control={form.control}
-                            name="skills"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Core Skills</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g. React, Writing, Sales (comma separated)" className="h-12 bg-muted/20 border-border/50 focus:border-emerald-600/50 rounded-xl" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
                             name="goal"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2">
+                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-indigo-600 flex items-center gap-2">
                                         <Sparkles className="w-3.5 h-3.5" />
-                                        Income Generation Goal
+                                        The Holistic Transformation Goal
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="e.g. Make an extra $2,000 this month through freelance web development."
-                                            className="min-h-[120px] bg-emerald-600/[0.02] border-emerald-600/20 focus:border-emerald-600 rounded-2xl"
+                                            placeholder="e.g. I want to completely overhaul my lifestyle for better health and more meaningful relationships."
+                                            className="min-h-[120px] bg-indigo-600/[0.02] border-indigo-600/20 focus:border-indigo-600 rounded-2xl"
                                             {...field}
                                         />
                                     </FormControl>
@@ -174,13 +172,13 @@ export function IncomeBlueprintForm() {
                             </div>
                         )}
 
-                        <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-lg shadow-emerald-600/20" disabled={isLoading}>
+                        <Button type="submit" className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-lg shadow-indigo-600/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting Revenue Plan...</>
+                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Designing Life Roadmap...</>
                             ) : (
                                 <span className="flex items-center gap-2">
-                                    <HandCoins className="w-5 h-5" />
-                                    Generate Income Plan
+                                    <Map className="w-5 h-5" />
+                                    Generate Life Blueprint
                                 </span>
                             )}
                         </Button>

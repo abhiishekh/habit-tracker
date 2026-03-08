@@ -129,32 +129,38 @@ export function BlueprintForm({ domain, title, description, icon: Icon, colorCla
                                     key={field.name}
                                     control={form.control}
                                     name={field.name as any}
-                                    render={({ field: fieldProps }) => (
-                                        <FormItem className={field.type === "textarea" ? "md:col-span-2" : ""}>
-                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
-                                                <PlusCircle className="w-3 h-3" />
-                                                {field.label}
-                                            </FormLabel>
-                                            <FormControl>
-                                                {field.type === "textarea" ? (
-                                                    <Textarea
-                                                        placeholder={field.placeholder}
-                                                        className="min-h-[120px] bg-muted/20 border-border/50 focus:border-primary/50 focus:bg-background/80 transition-all rounded-xl"
-                                                        {...fieldProps}
-                                                    />
-                                                ) : (
-                                                    <Input
-                                                        type={field.type}
-                                                        placeholder={field.placeholder}
-                                                        className="h-12 bg-muted/20 border-border/50 focus:border-primary/50 focus:bg-background/80 transition-all rounded-xl"
-                                                        {...fieldProps}
-                                                    />
-                                                )}
-                                            </FormControl>
-                                            {field.description && <FormDescription className="text-xs">{field.description}</FormDescription>}
-                                            <FormMessage className="text-xs font-medium" />
-                                        </FormItem>
-                                    )}
+                                    render={({ field: fieldProps }) => {
+                                        const { ref, value, ...restFieldProps } = fieldProps;
+                                        const safeValue = (value as string) ?? "";
+                                        return (
+                                            <FormItem className={field.type === "textarea" ? "md:col-span-2" : ""}>
+                                                <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
+                                                    <PlusCircle className="w-3 h-3" />
+                                                    {field.label}
+                                                </FormLabel>
+                                                <FormControl>
+                                                    {field.type === "textarea" ? (
+                                                        <Textarea
+                                                            placeholder={field.placeholder}
+                                                            className="min-h-[120px] bg-muted/20 border-border/50 focus:border-primary/50 focus:bg-background/80 transition-all rounded-xl"
+                                                            value={safeValue}
+                                                            {...restFieldProps}
+                                                        />
+                                                    ) : (
+                                                        <Input
+                                                            type={field.type}
+                                                            placeholder={field.placeholder}
+                                                            className="h-12 bg-muted/20 border-border/50 focus:border-primary/50 focus:bg-background/80 transition-all rounded-xl"
+                                                            value={safeValue}
+                                                            {...restFieldProps}
+                                                        />
+                                                    )}
+                                                </FormControl>
+                                                {field.description && <FormDescription className="text-xs">{field.description}</FormDescription>}
+                                                <FormMessage className="text-xs font-medium" />
+                                            </FormItem>
+                                        )
+                                    }}
                                 />
                             ))}
                         </div>
@@ -162,25 +168,29 @@ export function BlueprintForm({ domain, title, description, icon: Icon, colorCla
                         <FormField
                             control={form.control}
                             name="goal"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                                        <Sparkles className="w-3.5 h-3.5" />
-                                        The Master Objective
-                                    </FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                            placeholder="Example: I want to build a professional network of 50+ Senior Devs and Tech Leads in the Fintech sector within 30 days."
-                                            className="min-h-[150px] bg-primary/[0.02] border-primary/20 focus:border-primary focus:bg-background transition-all text-lg rounded-2xl shadow-sm"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription className="text-xs italic text-muted-foreground/70">
-                                        Pro-tip: Agents perform 40% better when you include specific numbers and dates.
-                                    </FormDescription>
-                                    <FormMessage className="text-xs font-medium" />
-                                </FormItem>
-                            )}
+                            render={({ field }) => {
+                                const { ref, value, ...restField } = field;
+                                return (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                                            <Sparkles className="w-3.5 h-3.5" />
+                                            The Master Objective
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Textarea
+                                                placeholder="Example: I want to build a professional network of 50+ Senior Devs and Tech Leads in the Fintech sector within 30 days."
+                                                className="min-h-[150px] bg-primary/[0.02] border-primary/20 focus:border-primary focus:bg-background transition-all text-lg rounded-2xl shadow-sm"
+                                                value={(value as string) ?? ""}
+                                                {...restField}
+                                            />
+                                        </FormControl>
+                                        <FormDescription className="text-xs italic text-muted-foreground/70">
+                                            Pro-tip: Agents perform 40% better when you include specific numbers and dates.
+                                        </FormDescription>
+                                        <FormMessage className="text-xs font-medium" />
+                                    </FormItem>
+                                )
+                            }}
                         />
 
                         {error && (

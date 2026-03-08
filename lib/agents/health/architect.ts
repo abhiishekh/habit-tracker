@@ -30,17 +30,17 @@
 
 import { invokeWithFallback } from "../llm-router";
 import { SystemMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
-import { saveHealthPlanTool }  from "./tools";
+import { saveHealthPlanTool } from "./tools";
 
 export async function runHealthArchitect(
-  userId  : string,
+  userId: string,
   userGoal: string,
   context?: {
-    age?            : number;
-    currentWeight?  : number;
-    existingIssues? : string;
-    dietPreference? : string;   // "veg", "non-veg", "vegan"
-    sleepHours?     : number;
+    age?: number;
+    currentWeight?: number;
+    existingIssues?: string;
+    dietPreference?: string;   // "veg", "non-veg", "vegan"
+    sleepHours?: number;
   }
 ) {
   const tools = [saveHealthPlanTool(userId)];
@@ -51,18 +51,22 @@ User Context : ${JSON.stringify(context || {})}
 Current Date : ${new Date().toLocaleDateString()}
 
 MISSION:
-1. Design a personalised nutrition plan (meals, portions, timings)
-2. Create sleep optimisation strategies specific to the user
-3. Build a stress management and recovery protocol
-4. Provide a day-by-day weekly health schedule
-5. Recommend supplements if relevant (be specific with dosage)
-6. Set hydration targets
+1. Design a personalised health improvement plan
+2. Structure it as a 4-WEEK plan with daily actionable TASKS
+3. Cover nutrition, sleep, stress management, exercise, and hydration
+
+OUTPUT STRUCTURE:
+You MUST call 'save_health_plan' with this structure:
+- goal (string), strategy (optional string)
+- weeks: array of { weekNumber, focus, tasks: [{ dayNumber, title, description, category }] }
+- Each week should have 5-7 tasks
+- category options: "nutrition", "sleep", "exercise", "stress", "hydration"
 
 RULES:
 - Be SPECIFIC — give actual meal examples, not just "eat healthy"
-- Include Indian food options where relevant (user likely in India)
-- sleepTips must be actionable habits, not generic advice
-- stressManagement must include at least one breathing/meditation technique
+- Include Indian food options where relevant
+- Tasks must be actionable habits, not generic advice
+- Include at least one breathing/meditation technique
 
 CRITICAL: You MUST call 'save_health_plan' to finalise.
 Responding with text only will NOT save anything.`;
@@ -72,20 +76,42 @@ Responding with text only will NOT save anything.`;
     new HumanMessage("Create my personalised health improvement plan.")
   ];
 
+  let totalTokensUsed = 0;
+  let totalRequests = 0;
+  const MAX_ITERATIONS = 5;
+  let iterations = 0;
+
   try {
-    while (true) {
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      totalRequests++;
+
+      const startTime = Date.now();
       const response = await invokeWithFallback(tools, messages);
+      const endTime = Date.now();
+
+      const usageMetadata = response?.response_metadata?.usage_metadata;
+      const tokensThisRequest = (usageMetadata as any)?.total_tokens || 0;
+      totalTokensUsed += tokensThisRequest;
+
+      console.log(`[Health Architect] API Request ${totalRequests} successful. Took ${endTime - startTime}ms. Tokens: ${tokensThisRequest} (Total Session: ${totalTokensUsed})`);
+
       messages.push(response);
 
-      console.log("[Health Agent] tool_calls:", response.tool_calls?.length ?? 0);
-
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.warn("[Health Agent] No tool call — returning text response.");
+        const content = typeof response.content === "string" ? response.content : "";
+        if (content.toLowerCase().includes("week") || content.toLowerCase().includes("nutrition")) {
+          return {
+            success: true,
+            message: content,
+            isMarkdownPlan: true,
+            stats: { totalRequests, totalTokensUsed }
+          };
+        }
         return {
           success: false,
-          message: typeof response.content === "string"
-            ? response.content
-            : "Health plan could not be generated. Please try again.",
+          message: content || "Health plan could not be generated.",
+          stats: { totalRequests, totalTokensUsed }
         };
       }
 
@@ -94,22 +120,20 @@ Responding with text only will NOT save anything.`;
         if (!tool) continue;
 
         try {
-          console.log(`[Health Agent] Executing tool: ${toolCall.name}`);
-          const output    = await (tool as any).invoke(toolCall.args);
+          const output = await (tool as any).invoke(toolCall.args);
           const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : outputStr,
+            content: outputStr,
           }));
 
           if (toolCall.name === "save_health_plan") {
             try {
               const parsed = JSON.parse(outputStr);
-              console.log("[Health Agent] ✅ Plan saved. ID:", parsed.planId);
-              return { ...parsed, success: true };
+              return { ...parsed, success: true, stats: { totalRequests, totalTokensUsed } };
             } catch {
-              return { success: true, message: outputStr };
+              return { success: true, message: outputStr, stats: { totalRequests, totalTokensUsed } };
             }
           }
 
@@ -117,7 +141,7 @@ Responding with text only will NOT save anything.`;
           console.error(`[Health Agent] Tool error (${toolCall.name}):`, toolError);
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
+            content: `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
           }));
         }
       }
@@ -128,7 +152,13 @@ Responding with text only will NOT save anything.`;
     return {
       success: false,
       message: "Health Architect encountered an error. Please try again.",
-      error  : String(error),
+      error: String(error),
     };
   }
+
+  return {
+    success: false,
+    message: "Max iterations reached without finalizing health plan.",
+    stats: { totalRequests, totalTokensUsed }
+  };
 }

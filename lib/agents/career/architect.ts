@@ -1,9 +1,10 @@
 // lib/agents/career/architect.ts
 
+import { model } from "@/lib/gemini";
 
+import { invokeWithFallback } from "../llm-router";
 import { HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import { researchJobMarketTool, saveCareerPlanTool } from "./tools";
-import { model } from "@/lib/gemini";
 
 export async function runCareerArchitect(
   userId: string,
@@ -18,13 +19,12 @@ export async function runCareerArchitect(
   }
 ) {
   const tools = [researchJobMarketTool, saveCareerPlanTool(userId)];
-  const modelWithTools = model.bindTools(tools);
 
   const systemPrompt = `You are a Senior Career Coach and HR Strategist with 15+ years of experience.
 User Goal: ${userGoal}
 User Context: ${JSON.stringify(context || {})}
 Current Date: ${new Date().toLocaleDateString()}
-
+ 
 MISSION:
 1. Call 'research_job_market' to understand what skills/certifications are needed for the target role
 2. Analyze the GAP between current role/skills and target role
@@ -43,28 +43,47 @@ IMPORTANT:
 - If targetCompany is provided, tailor the entire plan around that company's hiring process
 - Consider Indian job market if no location context is given (user is from India based on goal language)`;
 
-  const messages: any[] = [
+  let messages: any[] = [
     new SystemMessage(systemPrompt),
     new HumanMessage("Create my personalized career switch roadmap with actionable weekly milestones.")
   ];
 
-  try {
-    let iterations = 0;
-    const MAX_ITERATIONS = 5;
+  let totalTokensUsed = 0;
+  let totalRequests = 0;
+  const MAX_ITERATIONS = 5;
+  let iterations = 0;
 
+  try {
     while (iterations < MAX_ITERATIONS) {
       iterations++;
-      const response = await modelWithTools.invoke(messages);
+      totalRequests++;
+
+      const startTime = Date.now();
+      const response = await invokeWithFallback(tools, messages);
+      const endTime = Date.now();
+
+      const usageMetadata = response?.response_metadata?.usage_metadata;
+      const tokensThisRequest = (usageMetadata as any)?.total_tokens || 0;
+      totalTokensUsed += tokensThisRequest;
+
+      console.log(`[Career Architect] API Request ${totalRequests} successful. Took ${endTime - startTime}ms. Tokens: ${tokensThisRequest} (Total Session: ${totalTokensUsed})`);
+
       messages.push(response);
 
       if (!response.tool_calls || response.tool_calls.length === 0) {
         const content = typeof response.content === "string" ? response.content : "";
         if (content.toLowerCase().includes("week") || content.toLowerCase().includes("milestone")) {
-          return { success: true, message: content, isMarkdownPlan: true };
+          return {
+            success: true,
+            message: content,
+            isMarkdownPlan: true,
+            stats: { totalRequests, totalTokensUsed }
+          };
         }
         return {
           success: false,
-          message: content || "Career plan could not be generated. Please try again."
+          message: content || "Career plan could not be generated.",
+          stats: { totalRequests, totalTokensUsed }
         };
       }
 
@@ -76,8 +95,6 @@ IMPORTANT:
           const output = await (tool as any).invoke(toolCall.args);
           const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
-          console.log(`--- [Career Agent] Tool: ${toolCall.name} Output:`, outputStr.substring(0, 300));
-
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
             content: outputStr
@@ -86,9 +103,9 @@ IMPORTANT:
           if (toolCall.name === "save_career_plan") {
             try {
               const parsed = JSON.parse(outputStr);
-              return { ...parsed, success: true };
+              return { ...parsed, success: true, stats: { totalRequests, totalTokensUsed } };
             } catch {
-              return { success: true, message: outputStr };
+              return { success: true, message: outputStr, stats: { totalRequests, totalTokensUsed } };
             }
           }
         } catch (toolError) {
@@ -105,7 +122,13 @@ IMPORTANT:
     return {
       success: false,
       message: "Career Coach encountered an error. Please try again.",
-      error: String(error)
+      stats: { totalRequests, totalTokensUsed }
     };
   }
+
+  return {
+    success: false,
+    message: "Max iterations reached without finalizing career plan.",
+    stats: { totalRequests, totalTokensUsed }
+  };
 }

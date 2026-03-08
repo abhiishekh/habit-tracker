@@ -27,18 +27,18 @@
 
 // lib/agents/relationship/architect.ts
 
-import { invokeWithFallback }       from "../llm-router";
+import { invokeWithFallback } from "../llm-router";
 import { SystemMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { saveRelationshipPlanTool } from "./tools";
 
 export async function runRelationshipArchitect(
-  userId  : string,
+  userId: string,
   userGoal: string,
   context?: {
-    relationshipType? : string;   // "romantic" | "family" | "friendship" | "professional" | "social"
-    currentChallenge? : string;
-    introvertExtrovert? : string; // "introvert" | "extrovert" | "ambivert"
-    socialAnxiety?    : boolean;
+    relationshipType?: string;   // "romantic" | "family" | "friendship" | "professional" | "social"
+    currentChallenge?: string;
+    introvertExtrovert?: string; // "introvert" | "extrovert" | "ambivert"
+    socialAnxiety?: boolean;
   }
 ) {
   const tools = [saveRelationshipPlanTool(userId)];
@@ -49,19 +49,21 @@ User Context : ${JSON.stringify(context || {})}
 Current Date : ${new Date().toLocaleDateString()}
 
 MISSION:
-1. Identify the core communication gaps blocking the user's relationship goal
-2. Design specific communication improvement exercises (with scripts if needed)
-3. Build a 30-day relationship habit stack
-4. Create social growth activities appropriate to the relationship type
-5. Include conflict resolution techniques with step-by-step scripts
-6. Design a "social battery" management plan for introverts if relevant
-7. Provide conversation starters and deepening techniques
+1. Identify core communication gaps blocking the user's goal
+2. Structure it as a 4-WEEK relationship improvement plan with daily TASKS
+3. Cover communication, activities, habits, and conflict resolution
+
+OUTPUT STRUCTURE:
+You MUST call 'save_relationship_plan' with this structure:
+- goal (string), strategy (optional)
+- weeks: array of { weekNumber, focus, tasks: [{ dayNumber, title, description, type }] }
+- Each week should have 5-7 tasks
+- type options: "communication", "activity", "habit", "conflict"
 
 RULES:
-- communicationTips must include real example scripts e.g. "Instead of 'you never listen', say 'I feel unheard when...'"
-- habits must be daily micro-actions: "Send one genuine compliment per day"
-- activities must be specific: "Join one meetup.com event in your city this week"
-- Include an empathy-building exercise with instructions
+- Include real example scripts: "Instead of 'you never listen', say 'I feel unheard when...'"
+- Habits must be daily micro-actions: "Send one genuine compliment per day"
+- Activities must be specific: "Join one meetup.com event this week"
 
 CRITICAL: You MUST call 'save_relationship_plan' to finalise.
 Responding with text only will NOT save anything.`;
@@ -71,20 +73,42 @@ Responding with text only will NOT save anything.`;
     new HumanMessage("Create my personalised relationship improvement plan.")
   ];
 
+  let totalTokensUsed = 0;
+  let totalRequests = 0;
+  const MAX_ITERATIONS = 5;
+  let iterations = 0;
+
   try {
-    while (true) {
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      totalRequests++;
+
+      const startTime = Date.now();
       const response = await invokeWithFallback(tools, messages);
+      const endTime = Date.now();
+
+      const usageMetadata = response?.response_metadata?.usage_metadata;
+      const tokensThisRequest = (usageMetadata as any)?.total_tokens || 0;
+      totalTokensUsed += tokensThisRequest;
+
+      console.log(`[Relationship Architect] API Request ${totalRequests} successful. Took ${endTime - startTime}ms. Tokens: ${tokensThisRequest} (Total Session: ${totalTokensUsed})`);
+
       messages.push(response);
 
-      console.log("[Relationship Agent] tool_calls:", response.tool_calls?.length ?? 0);
-
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.warn("[Relationship Agent] No tool call — returning text response.");
+        const content = typeof response.content === "string" ? response.content : "";
+        if (content.toLowerCase().includes("week") || content.toLowerCase().includes("relationship") || content.toLowerCase().includes("communication")) {
+          return {
+            success: true,
+            message: content,
+            isMarkdownPlan: true,
+            stats: { totalRequests, totalTokensUsed }
+          };
+        }
         return {
           success: false,
-          message: typeof response.content === "string"
-            ? response.content
-            : "Relationship plan could not be generated. Please try again.",
+          message: content || "Relationship plan could not be generated.",
+          stats: { totalRequests, totalTokensUsed }
         };
       }
 
@@ -93,22 +117,20 @@ Responding with text only will NOT save anything.`;
         if (!tool) continue;
 
         try {
-          console.log(`[Relationship Agent] Executing tool: ${toolCall.name}`);
-          const output    = await (tool as any).invoke(toolCall.args);
+          const output = await (tool as any).invoke(toolCall.args);
           const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : outputStr,
+            content: outputStr,
           }));
 
           if (toolCall.name === "save_relationship_plan") {
             try {
               const parsed = JSON.parse(outputStr);
-              console.log("[Relationship Agent] ✅ Plan saved. ID:", parsed.planId);
-              return { ...parsed, success: true };
+              return { ...parsed, success: true, stats: { totalRequests, totalTokensUsed } };
             } catch {
-              return { success: true, message: outputStr };
+              return { success: true, message: outputStr, stats: { totalRequests, totalTokensUsed } };
             }
           }
 
@@ -116,7 +138,7 @@ Responding with text only will NOT save anything.`;
           console.error(`[Relationship Agent] Tool error (${toolCall.name}):`, toolError);
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
+            content: `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
           }));
         }
       }
@@ -127,7 +149,13 @@ Responding with text only will NOT save anything.`;
     return {
       success: false,
       message: "Relationship Architect encountered an error. Please try again.",
-      error  : String(error),
+      error: String(error),
     };
   }
+
+  return {
+    success: false,
+    message: "Max iterations reached without finalizing relationship plan.",
+    stats: { totalRequests, totalTokensUsed }
+  };
 }

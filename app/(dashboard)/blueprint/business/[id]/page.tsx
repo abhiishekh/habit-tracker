@@ -1,7 +1,6 @@
 "use client"
 
-import React from "react"
-import { BlueprintTaskView } from "@/components/blueprint/BlueprintTaskView"
+import { PlanView } from "@/components/blueprint/PlanView"
 import { ArrowLeft, BriefcaseBusiness } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
@@ -25,7 +24,7 @@ export default function BusinessPlanDetailPage() {
                     BUSINESS ARCHITECT
                 </div>
             </div>
-            <BlueprintTaskView planId={id} />
+            <PlanView planId={id} domain="business" accentColor="slate" icon={BriefcaseBusiness} title="Business Architect" />
         </div>
     )
 }

@@ -27,20 +27,20 @@
 
 // lib/agents/productivity/architect.ts
 
-import { invokeWithFallback }       from "../llm-router";
+import { invokeWithFallback } from "../llm-router";
 import { SystemMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { saveProductivityPlanTool } from "./tools";
 
 export async function runProductivityArchitect(
-  userId  : string,
+  userId: string,
   userGoal: string,
   context?: {
-    workType?       : string;    // "remote" | "office" | "freelance" | "student"
-    wakeTime?       : string;    // e.g. "6:30 AM"
-    sleepTime?      : string;
-    biggestBlock?   : string;    // e.g. "social media", "context switching"
-    toolsUsed?      : string[];  // e.g. ["Notion", "Google Calendar"]
-    hoursAvailable? : number;
+    workType?: string;    // "remote" | "office" | "freelance" | "student"
+    wakeTime?: string;    // e.g. "6:30 AM"
+    sleepTime?: string;
+    biggestBlock?: string;    // e.g. "social media", "context switching"
+    toolsUsed?: string[];  // e.g. ["Notion", "Google Calendar"]
+    hoursAvailable?: number;
   }
 ) {
   const tools = [saveProductivityPlanTool(userId)];
@@ -51,19 +51,21 @@ User Context : ${JSON.stringify(context || {})}
 Current Date : ${new Date().toLocaleDateString()}
 
 MISSION:
-1. Design a personalised daily schedule with time blocks (include exact times)
-2. Select the best focus techniques for this user's work type (Pomodoro, time-blocking, deep work etc.)
-3. Build a task prioritisation system (e.g. Eisenhower Matrix, MIT method, etc.)
-4. Create a morning routine that maximises energy and focus
-5. Create an evening routine for recovery and next-day prep
-6. Design a weekly review system to track progress and iterate
-7. Identify and eliminate the user's top productivity killers
+1. Design a personalised productivity system
+2. Structure it as a 4-WEEK plan with daily actionable TASKS
+3. Cover daily schedule, focus techniques, routines, and reviews
+
+OUTPUT STRUCTURE:
+You MUST call 'save_productivity_plan' with this structure:
+- goal (string), strategy (optional)
+- weeks: array of { weekNumber, focus, tasks: [{ dayNumber, title, description, type }] }
+- Each week should have 5-7 tasks
+- type options: "routine", "focus", "review", "system"
 
 RULES:
-- dailySchedule must include exact time slots: "6:30 AM – Wake + no phone 10 min"
-- focusMethods must be specific with instructions e.g. "Pomodoro: 25 min work, 5 min break, after 4 cycles take 30 min"
-- taskSystem must describe a full workflow the user runs every morning
-- weeklyReview must be a step-by-step Sunday/Friday ritual
+- Tasks must include exact time slots: "6:30 AM – Wake + no phone 10 min"
+- Focus methods must be specific: "Pomodoro: 25 min work, 5 min break"
+- Include a weekly review ritual task
 
 CRITICAL: You MUST call 'save_productivity_plan' to finalise.
 Responding with text only will NOT save anything.`;
@@ -73,20 +75,42 @@ Responding with text only will NOT save anything.`;
     new HumanMessage("Create my complete productivity system.")
   ];
 
+  let totalTokensUsed = 0;
+  let totalRequests = 0;
+  const MAX_ITERATIONS = 5;
+  let iterations = 0;
+
   try {
-    while (true) {
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      totalRequests++;
+
+      const startTime = Date.now();
       const response = await invokeWithFallback(tools, messages);
+      const endTime = Date.now();
+
+      const usageMetadata = response?.response_metadata?.usage_metadata;
+      const tokensThisRequest = (usageMetadata as any)?.total_tokens || 0;
+      totalTokensUsed += tokensThisRequest;
+
+      console.log(`[Productivity Architect] API Request ${totalRequests} successful. Took ${endTime - startTime}ms. Tokens: ${tokensThisRequest} (Total Session: ${totalTokensUsed})`);
+
       messages.push(response);
 
-      console.log("[Productivity Agent] tool_calls:", response.tool_calls?.length ?? 0);
-
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.warn("[Productivity Agent] No tool call — returning text response.");
+        const content = typeof response.content === "string" ? response.content : "";
+        if (content.toLowerCase().includes("week") || content.toLowerCase().includes("productivity") || content.toLowerCase().includes("schedule")) {
+          return {
+            success: true,
+            message: content,
+            isMarkdownPlan: true,
+            stats: { totalRequests, totalTokensUsed }
+          };
+        }
         return {
           success: false,
-          message: typeof response.content === "string"
-            ? response.content
-            : "Productivity plan could not be generated. Please try again.",
+          message: content || "Productivity system could not be generated.",
+          stats: { totalRequests, totalTokensUsed }
         };
       }
 
@@ -95,22 +119,20 @@ Responding with text only will NOT save anything.`;
         if (!tool) continue;
 
         try {
-          console.log(`[Productivity Agent] Executing tool: ${toolCall.name}`);
-          const output    = await (tool as any).invoke(toolCall.args);
+          const output = await (tool as any).invoke(toolCall.args);
           const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : outputStr,
+            content: outputStr,
           }));
 
           if (toolCall.name === "save_productivity_plan") {
             try {
               const parsed = JSON.parse(outputStr);
-              console.log("[Productivity Agent] ✅ Plan saved. ID:", parsed.planId);
-              return { ...parsed, success: true };
+              return { ...parsed, success: true, stats: { totalRequests, totalTokensUsed } };
             } catch {
-              return { success: true, message: outputStr };
+              return { success: true, message: outputStr, stats: { totalRequests, totalTokensUsed } };
             }
           }
 
@@ -118,7 +140,7 @@ Responding with text only will NOT save anything.`;
           console.error(`[Productivity Agent] Tool error (${toolCall.name}):`, toolError);
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
+            content: `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
           }));
         }
       }
@@ -129,7 +151,13 @@ Responding with text only will NOT save anything.`;
     return {
       success: false,
       message: "Productivity Architect encountered an error. Please try again.",
-      error  : String(error),
+      error: String(error),
     };
   }
+
+  return {
+    success: false,
+    message: "Max iterations reached without finalizing productivity system.",
+    stats: { totalRequests, totalTokensUsed }
+  };
 }

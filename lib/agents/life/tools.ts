@@ -4,61 +4,59 @@ import { z } from "zod";
 
 export const saveLifePlanTool = (userId: string) => new DynamicStructuredTool({
     name: "save_life_blueprint_plan",
-    description: "Saves a holistic life transformation plan with weekly objectives.",
+    description: "Saves a holistic life transformation plan with weekly tasks to the database.",
     schema: z.object({
         goal: z.string().describe("The primary life objective"),
-        currentStatus: z.string().describe("User's current situation summary"),
-        priority: z.string().describe("Top priority area"),
-        timeframe: z.string().describe("Target timeframe or review cycle"),
-        weeklyTasks: z.array(z.object({
-            week: z.number().describe("Week number (1-4)"),
-            day: z.number().optional().describe("Day number (1-7)"),
-            title: z.string().describe("Task title"),
-            description: z.string().describe("Task detail"),
-            expectedOutcome: z.string().describe("What is achieved by this task"),
-            priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
-            deadline: z.string().optional().describe("ISO date string for completion"),
-        })).describe("List of strategic growth tasks across 4 weeks"),
+        strategy: z.string().optional().describe("Overall life strategy summary"),
+        weeks: z.array(z.object({
+            weekNumber: z.number().describe("Week number (1-4)"),
+            focus: z.string().describe("Theme of this week e.g. 'Foundation Setting'"),
+            tasks: z.array(z.object({
+                dayNumber: z.number().optional().describe("Day 1-7 of the week"),
+                title: z.string().describe("Task title"),
+                description: z.string().describe("Task detail"),
+                domain: z.string().optional().describe("Life domain e.g. career, fitness, finance"),
+            }))
+        })).describe("4-week life transformation plan"),
     }),
-    func: async (input) => {
+    func: async ({ goal, strategy, weeks }) => {
         try {
-            // 1. Save the Life Plan
-            const lifePlan = await prisma.lifePlan.create({
+            const endDate = new Date();
+            endDate.setDate(endDate.getDate() + (weeks.length * 7));
+
+            const plan = await prisma.lifePlan.create({
                 data: {
                     userId,
-                    goal: input.goal,
-                    currentStatus: input.currentStatus,
-                    priority: input.priority,
-                    timeframe: input.timeframe,
+                    goal,
+                    strategy: strategy || null,
+                    endDate,
+                    weeks: {
+                        create: weeks.map(w => ({
+                            weekNumber: w.weekNumber,
+                            focus: w.focus,
+                            tasks: {
+                                create: w.tasks.map(t => ({
+                                    dayNumber: t.dayNumber,
+                                    title: t.title,
+                                    description: t.description,
+                                    domain: t.domain || null,
+                                    isCompleted: false,
+                                }))
+                            }
+                        }))
+                    }
                 },
             });
 
-            // 2. Save the Blueprint Tasks
-            const tasks = input.weeklyTasks.map(task => ({
-                userId,
-                planId: lifePlan.id,
-                planType: "Life",
-                weekNumber: task.week,
-                dayNumber: task.day || null,
-                title: task.title,
-                description: task.description,
-                expectedOutcome: task.expectedOutcome,
-                priority: task.priority,
-                deadline: task.deadline ? new Date(task.deadline) : null,
-            }));
-
-            await prisma.blueprintTask.createMany({
-                data: tasks,
-            });
-
+            console.log("[Life Tool] ✅ Plan saved:", plan.id);
             return JSON.stringify({
                 success: true,
                 message: "Life Transformation Blueprint architected and saved successfully.",
-                planId: lifePlan.id
+                planId: plan.id
             });
         } catch (error) {
-            console.error("Error saving Life plan:", error);
-            return JSON.stringify({ success: false, message: "Internal Database Error" });
+            console.error("[Life Tool] Prisma error:", error);
+            return JSON.stringify({ success: false, error: String(error) });
         }
     },
 });

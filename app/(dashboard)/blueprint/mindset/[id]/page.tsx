@@ -1,7 +1,6 @@
 "use client"
 
-import React from "react"
-import { BlueprintTaskView } from "@/components/blueprint/BlueprintTaskView"
+import { PlanView } from "@/components/blueprint/PlanView"
 import { ArrowLeft, Brain } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
@@ -20,12 +19,12 @@ export default function MindsetPlanDetailPage() {
                     <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                     BACK TO HUB
                 </Link>
-                <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-pink-500/10 text-pink-600 dark:text-pink-400 text-sm font-black border border-pink-500/20 shadow-sm">
+                <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 text-sm font-black border border-purple-500/20 shadow-sm">
                     <Brain className="w-5 h-5" />
                     MINDSET COACH
                 </div>
             </div>
-            <BlueprintTaskView planId={id} />
+            <PlanView planId={id} domain="mindset" accentColor="purple" icon={Brain} title="Mindset Coach" />
         </div>
     )
 }

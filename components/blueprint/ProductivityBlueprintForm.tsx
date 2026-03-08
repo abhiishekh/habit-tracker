@@ -15,25 +15,26 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Sparkles, BriefcaseBusiness, GraduationCap, Clock, Building2 } from "lucide-react"
+import { Sparkles, Zap, Clock } from "lucide-react"
 import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import { motion } from "framer-motion"
 
 const formSchema = z.object({
-    goal: z.string().min(10, "Describe your career goal briefly."),
-    currentRole: z.string().min(2, "Current role is required."),
-    targetRole: z.string().min(2, "Target role is required."),
-    targetCompany: z.string().optional(),
-    currentSkills: z.string().min(2, "List some skills."),
-    yearsOfExperience: z.coerce.number().min(0),
-    hoursPerWeek: z.coerce.number().min(1).max(100),
+    goal: z.string().min(10, "Tell us more about your productivity goal."),
+    workType: z.enum(["remote", "office", "freelance", "student"]),
+    wakeTime: z.string().min(2, "Required"),
+    sleepTime: z.string().min(2, "Required"),
+    biggestBlock: z.string().min(2, "What's killing your focus?"),
+    hoursAvailable: z.coerce.number().min(1).max(24),
+    toolsUsed: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
 
-export function CareerBlueprintForm() {
+export function ProductivityBlueprintForm() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
@@ -42,12 +43,12 @@ export function CareerBlueprintForm() {
         resolver: zodResolver(formSchema) as any,
         defaultValues: {
             goal: "",
-            currentRole: "",
-            targetRole: "",
-            targetCompany: "",
-            currentSkills: "",
-            yearsOfExperience: 2,
-            hoursPerWeek: 10,
+            workType: "remote",
+            wakeTime: "07:00",
+            sleepTime: "22:00",
+            biggestBlock: "",
+            hoursAvailable: 8,
+            toolsUsed: "",
         },
     })
 
@@ -58,28 +59,28 @@ export function CareerBlueprintForm() {
             const payload = {
                 userGoal: values.goal,
                 context: {
-                    currentRole: values.currentRole,
-                    targetRole: values.targetRole,
-                    targetCompany: values.targetCompany,
-                    currentSkills: values.currentSkills.split(',').map(s => s.trim()),
-                    yearsOfExperience: values.yearsOfExperience,
-                    hoursPerWeek: values.hoursPerWeek
+                    workType: values.workType,
+                    wakeTime: values.wakeTime,
+                    sleepTime: values.sleepTime,
+                    biggestBlock: values.biggestBlock,
+                    hoursAvailable: values.hoursAvailable,
+                    toolsUsed: values.toolsUsed ? values.toolsUsed.split(',').map(t => t.trim()) : []
                 }
             };
 
-            const response = await fetch("/api/agents/career", {
+            const response = await fetch("/api/agents/productivity", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             })
             const data = await response.json()
             if (data.success && data.planId) {
-                router.push(`/blueprint/career/${data.planId}`)
+                router.push(`/blueprint/productivity/${data.planId}`)
             } else {
-                setError(data.message || "Career Architect encountered an error.")
+                setError(data.message || "Productivity Architect encountered an error.")
             }
         } catch (error) {
-            console.error("Career Agent failed:", error)
+            console.error("Productivity Agent failed:", error)
             setError("Connection error. Please try again.")
         } finally {
             setIsLoading(false)
@@ -95,11 +96,11 @@ export function CareerBlueprintForm() {
             <div className="bg-card p-8 md:p-10 rounded-[1.4rem] shadow-2xl space-y-10">
                 <div className="flex flex-col md:flex-row md:items-center gap-6">
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-amber-600/10 text-amber-600 shadow-inner">
-                        <BriefcaseBusiness className="w-8 h-8" />
+                        <Zap className="w-8 h-8" />
                     </div>
                     <div>
-                        <h2 className="text-3xl font-extrabold tracking-tight font-heading">Career Mentor AI</h2>
-                        <p className="text-muted-foreground text-lg leading-relaxed">Architect a step-by-step roadmap to transition from your current position to your dream role.</p>
+                        <h2 className="text-3xl font-extrabold tracking-tight font-heading">Productivity Architect AI</h2>
+                        <p className="text-muted-foreground text-lg leading-relaxed">High-performance task systems. Reclaiming your time for what matters.</p>
                     </div>
                 </div>
 
@@ -110,74 +111,33 @@ export function CareerBlueprintForm() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
-                                name="currentRole"
+                                name="workType"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Current Role</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="e.g. Graphic Designer" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
-                                        </FormControl>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Work Environment</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl">
+                                                    <SelectValue placeholder="Select" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="remote">Remote Work</SelectItem>
+                                                <SelectItem value="office">Office / On-site</SelectItem>
+                                                <SelectItem value="freelance">Freelance</SelectItem>
+                                                <SelectItem value="student">Student</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
                             <FormField
                                 control={form.control}
-                                name="targetRole"
+                                name="hoursAvailable"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Target Role</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="e.g. UI/UX Product Designer" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="targetCompany"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
-                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Dream Company</FormLabel>
-                                        </div>
-                                        <FormControl>
-                                            <Input placeholder="e.g. Stripe, Google" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="yearsOfExperience"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
-                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Years Exp.</FormLabel>
-                                        </div>
-                                        <FormControl>
-                                            <Input type="number" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="hoursPerWeek"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Hours/Week</FormLabel>
-                                        </div>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Daily Focus Hours</FormLabel>
                                         <FormControl>
                                             <Input type="number" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
                                         </FormControl>
@@ -187,19 +147,63 @@ export function CareerBlueprintForm() {
                             />
                         </div>
 
-                        <FormField
-                            control={form.control}
-                            name="currentSkills"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Current Skills</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g. React, Figma, Communication (comma separated)" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="wakeTime"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Wake-up Time</FormLabel>
+                                        <FormControl>
+                                            <Input type="time" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="sleepTime"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Bedtime</FormLabel>
+                                        <FormControl>
+                                            <Input type="time" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="biggestBlock"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Biggest Distraction</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g. Social Media, Slack, Context Switching" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="toolsUsed"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Tools Used</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g. Notion, Google Cal, Obsidian" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
 
                         <FormField
                             control={form.control}
@@ -208,11 +212,11 @@ export function CareerBlueprintForm() {
                                 <FormItem>
                                     <FormLabel className="text-xs font-bold uppercase tracking-widest text-amber-600 flex items-center gap-2">
                                         <Sparkles className="w-3.5 h-3.5" />
-                                        Transition Objective
+                                        Productivity Objective
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="e.g. I want to transition from print design to digital product design and land a junior role at a fintech startup within 6 months."
+                                            placeholder="e.g. I want to build a deep work routine and ship my side project in 30 days."
                                             className="min-h-[120px] bg-amber-600/[0.02] border-amber-600/20 focus:border-amber-600 rounded-2xl"
                                             {...field}
                                         />
@@ -230,11 +234,11 @@ export function CareerBlueprintForm() {
 
                         <Button type="submit" className="w-full h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl shadow-lg shadow-amber-600/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Mapping Career Leap...</>
+                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Architecting System...</>
                             ) : (
                                 <span className="flex items-center gap-2">
-                                    <GraduationCap className="w-5 h-5" />
-                                    Generate Career Roadmap
+                                    <Clock className="w-5 h-5" />
+                                    Generate Productivity Blueprint
                                 </span>
                             )}
                         </Button>

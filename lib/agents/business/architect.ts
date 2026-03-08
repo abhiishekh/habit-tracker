@@ -36,18 +36,18 @@
 
 // lib/agents/business/architect.ts
 
-import { invokeWithFallback }  from "../llm-router";
+import { invokeWithFallback } from "../llm-router";
 import { SystemMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { createBusinessPlanTool } from "./tools";
 
 export async function runBusinessArchitect(
-  userId : string,
+  userId: string,
   userGoal: string,
   context?: {
-    industry?        : string;
-    budget?          : string;
-    experience?      : string;
-    targetAudience?  : string;
+    industry?: string;
+    budget?: string;
+    experience?: string;
+    targetAudience?: string;
   }
 ) {
   const tools = [createBusinessPlanTool(userId)];
@@ -61,14 +61,19 @@ MISSION:
 1. Analyse the business idea and define the core value proposition
 2. Identify the target market and ideal customer profile
 3. Design a realistic revenue model (pricing, channels, monetisation)
-4. List 3-5 market validation steps the user should do FIRST
-5. Identify top 3 risks and mitigation strategies
-6. Build a 30-day action roadmap with specific daily/weekly tasks
+4. Create a 4-week plan structured as WEEKS, each with daily TASKS
+
+OUTPUT STRUCTURE:
+You MUST call 'save_business_plan' with this structure:
+- goal, idea, targetMarket, revenueModel (strings)
+- weeks: array of { weekNumber, focus, tasks: [{ dayNumber, title, description, type }] }
+- Each week should have 5-7 tasks
+- type options: "validation", "marketing", "product", "operations"
 
 RULES:
 - Be SPECIFIC — no generic advice. Give platform names, price points, real tactics.
-- roadmap items must be actionable: "Post on IndieHackers with X headline" not "market your product"
-- milestones must include a day number, task, and expected outcome
+- Tasks must be actionable: "Post on IndieHackers with X headline" not "market your product"
+- Every task needs a clear title and detailed description
 
 CRITICAL: You MUST call 'save_business_plan' to finalise the plan.
 Responding with text only will NOT save anything.`;
@@ -78,47 +83,64 @@ Responding with text only will NOT save anything.`;
     new HumanMessage("Create my detailed startup business plan now.")
   ];
 
+  let totalTokensUsed = 0;
+  let totalRequests = 0;
+  const MAX_ITERATIONS = 5;
+  let iterations = 0;
+
   try {
-    while (true) {
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      totalRequests++;
+
+      const startTime = Date.now();
       const response = await invokeWithFallback(tools, messages);
+      const endTime = Date.now();
+
+      const usageMetadata = response?.response_metadata?.usage_metadata;
+      const tokensThisRequest = (usageMetadata as any)?.total_tokens || 0;
+      totalTokensUsed += tokensThisRequest;
+
+      console.log(`[Business Architect] API Request ${totalRequests} successful. Took ${endTime - startTime}ms. Tokens: ${tokensThisRequest} (Total Session: ${totalTokensUsed})`);
+
       messages.push(response);
 
-      console.log("[Business Agent] tool_calls:", response.tool_calls?.length ?? 0);
-
-      // ── No tool call → AI responded with text only ──────────
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.warn("[Business Agent] No tool call — returning text response.");
+        const content = typeof response.content === "string" ? response.content : "";
+        if (content.toLowerCase().includes("week") || content.toLowerCase().includes("business")) {
+          return {
+            success: true,
+            message: content,
+            isMarkdownPlan: true,
+            stats: { totalRequests, totalTokensUsed }
+          };
+        }
         return {
           success: false,
-          message: typeof response.content === "string"
-            ? response.content
-            : "Business plan could not be generated. Please try again."
+          message: content || "Business plan could not be generated.",
+          stats: { totalRequests, totalTokensUsed }
         };
       }
 
-      // ── Execute every tool the AI requested ─────────────────
       for (const toolCall of response.tool_calls) {
         const tool = tools.find(t => t.name === toolCall.name);
         if (!tool) continue;
 
         try {
-          console.log(`[Business Agent] Executing tool: ${toolCall.name}`);
-          const output    = await (tool as any).invoke(toolCall.args);
+          const output = await (tool as any).invoke(toolCall.args);
           const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : outputStr,
+            content: outputStr,
           }));
 
-          // ── Save tool finished → return result ───────────────
           if (toolCall.name === "save_business_plan") {
             try {
               const parsed = JSON.parse(outputStr);
-              console.log("[Business Agent] ✅ Plan saved. ID:", parsed.planId);
-              return { ...parsed, success: true };
+              return { ...parsed, success: true, stats: { totalRequests, totalTokensUsed } };
             } catch {
-              return { success: true, message: outputStr };
+              return { success: true, message: outputStr, stats: { totalRequests, totalTokensUsed } };
             }
           }
 
@@ -126,7 +148,7 @@ Responding with text only will NOT save anything.`;
           console.error(`[Business Agent] Tool error (${toolCall.name}):`, toolError);
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
+            content: `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
           }));
         }
       }
@@ -137,7 +159,13 @@ Responding with text only will NOT save anything.`;
     return {
       success: false,
       message: "Business Architect encountered an error. Please try again.",
-      error  : String(error),
+      error: String(error),
     };
   }
+
+  return {
+    success: false,
+    message: "Max iterations reached without finalizing business plan.",
+    stats: { totalRequests, totalTokensUsed }
+  };
 }

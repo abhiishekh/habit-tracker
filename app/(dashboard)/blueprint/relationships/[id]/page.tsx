@@ -1,12 +1,11 @@
 "use client"
 
-import React from "react"
-import { BlueprintTaskView } from "@/components/blueprint/BlueprintTaskView"
-import { ArrowLeft, Scale } from "lucide-react"
+import { PlanView } from "@/components/blueprint/PlanView"
+import { ArrowLeft, Users } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
-export default function RelationshipsPlanDetailPage() {
+export default function RelationshipPlanDetailPage() {
     const params = useParams()
     const id = params.id as string
 
@@ -20,12 +19,12 @@ export default function RelationshipsPlanDetailPage() {
                     <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                     BACK TO HUB
                 </Link>
-                <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 text-sm font-black border border-teal-500/20 shadow-sm">
-                    <Scale className="w-5 h-5" />
-                    RELATIONSHIP SPECIALIST
+                <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-pink-500/10 text-pink-600 dark:text-pink-400 text-sm font-black border border-pink-500/20 shadow-sm">
+                    <Users className="w-5 h-5" />
+                    RELATIONSHIP COACH
                 </div>
             </div>
-            <BlueprintTaskView planId={id} />
+            <PlanView planId={id} domain="relationships" accentColor="pink" icon={Users} title="Relationship Coach" />
         </div>
     )
 }

@@ -29,19 +29,19 @@
 
 // lib/agents/learning/architect.ts
 
-import { invokeWithFallback }    from "../llm-router";
+import { invokeWithFallback } from "../llm-router";
 import { SystemMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { saveLearningRoadmapTool } from "./tools";
 
 export async function runLearningArchitect(
-  userId  : string,
+  userId: string,
   userGoal: string,
   context?: {
-    currentLevel?       : string;   // "beginner" | "intermediate" | "advanced"
-    hoursPerDay?        : number;
-    preferredStyle?     : string;   // "video" | "reading" | "projects" | "mixed"
-    targetDate?         : string;
-    existingSkills?     : string[];
+    currentLevel?: string;   // "beginner" | "intermediate" | "advanced"
+    hoursPerDay?: number;
+    preferredStyle?: string;   // "video" | "reading" | "projects" | "mixed"
+    targetDate?: string;
+    existingSkills?: string[];
   }
 ) {
   const tools = [saveLearningRoadmapTool(userId)];
@@ -53,16 +53,20 @@ Current Date : ${new Date().toLocaleDateString()}
 
 MISSION:
 1. Break the learning goal into specific, ordered skills to acquire
-2. Recommend the BEST free and paid resources for each skill (YouTube channels, courses, books, docs)
-3. Create a week-by-week learning plan with daily time blocks
-4. Define clear checkpoints — how the user knows they've mastered each skill
-5. Build a capstone project idea that combines all skills learned
+2. Structure it as a multi-WEEK plan with daily actionable TASKS
+3. Define a capstone project that combines all skills learned
+
+OUTPUT STRUCTURE:
+You MUST call 'save_learning_plan' with this structure:
+- goal (string), strategy (optional), capstoneProject (optional)
+- weeks: array of { weekNumber, focus, tasks: [{ dayNumber, title, description, resource }] }
+- Each week should have 5-7 tasks
+- resource: specific course, tutorial, or book reference for each task
 
 RULES:
 - Resources must be SPECIFIC: "freeCodeCamp React course on YouTube" not just "watch YouTube"
-- weeklyPlan items must include: week number, focus topic, resource, daily task
-- dailyTimeCommitment must be realistic based on hoursPerDay in context
-- checkpoints must be testable: "Build a todo app using X" not "understand X"
+- Tasks must include what to learn AND how to practice
+- Include checkpoints — testable tasks like "Build a todo app using X"
 
 CRITICAL: You MUST call 'save_learning_plan' to finalise.
 Responding with text only will NOT save anything.`;
@@ -72,20 +76,42 @@ Responding with text only will NOT save anything.`;
     new HumanMessage("Create my complete learning roadmap.")
   ];
 
+  let totalTokensUsed = 0;
+  let totalRequests = 0;
+  const MAX_ITERATIONS = 5;
+  let iterations = 0;
+
   try {
-    while (true) {
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      totalRequests++;
+
+      const startTime = Date.now();
       const response = await invokeWithFallback(tools, messages);
+      const endTime = Date.now();
+
+      const usageMetadata = response?.response_metadata?.usage_metadata;
+      const tokensThisRequest = (usageMetadata as any)?.total_tokens || 0;
+      totalTokensUsed += tokensThisRequest;
+
+      console.log(`[Learning Architect] API Request ${totalRequests} successful. Took ${endTime - startTime}ms. Tokens: ${tokensThisRequest} (Total Session: ${totalTokensUsed})`);
+
       messages.push(response);
 
-      console.log("[Learning Agent] tool_calls:", response.tool_calls?.length ?? 0);
-
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.warn("[Learning Agent] No tool call — returning text response.");
+        const content = typeof response.content === "string" ? response.content : "";
+        if (content.toLowerCase().includes("week") || content.toLowerCase().includes("learning")) {
+          return {
+            success: true,
+            message: content,
+            isMarkdownPlan: true,
+            stats: { totalRequests, totalTokensUsed }
+          };
+        }
         return {
           success: false,
-          message: typeof response.content === "string"
-            ? response.content
-            : "Learning plan could not be generated. Please try again.",
+          message: content || "Learning plan could not be generated.",
+          stats: { totalRequests, totalTokensUsed }
         };
       }
 
@@ -94,22 +120,20 @@ Responding with text only will NOT save anything.`;
         if (!tool) continue;
 
         try {
-          console.log(`[Learning Agent] Executing tool: ${toolCall.name}`);
-          const output    = await (tool as any).invoke(toolCall.args);
+          const output = await (tool as any).invoke(toolCall.args);
           const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : outputStr,
+            content: outputStr,
           }));
 
           if (toolCall.name === "save_learning_plan") {
             try {
               const parsed = JSON.parse(outputStr);
-              console.log("[Learning Agent] ✅ Plan saved. ID:", parsed.planId);
-              return { ...parsed, success: true };
+              return { ...parsed, success: true, stats: { totalRequests, totalTokensUsed } };
             } catch {
-              return { success: true, message: outputStr };
+              return { success: true, message: outputStr, stats: { totalRequests, totalTokensUsed } };
             }
           }
 
@@ -117,7 +141,7 @@ Responding with text only will NOT save anything.`;
           console.error(`[Learning Agent] Tool error (${toolCall.name}):`, toolError);
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
+            content: `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
           }));
         }
       }
@@ -128,7 +152,13 @@ Responding with text only will NOT save anything.`;
     return {
       success: false,
       message: "Learning Architect encountered an error. Please try again.",
-      error  : String(error),
+      error: String(error),
     };
   }
+
+  return {
+    success: false,
+    message: "Max iterations reached without finalizing learning plan.",
+    stats: { totalRequests, totalTokensUsed }
+  };
 }

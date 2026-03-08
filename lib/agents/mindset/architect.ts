@@ -26,18 +26,18 @@
 // }
 // lib/agents/mindset/architect.ts
 
-import { invokeWithFallback }  from "../llm-router";
+import { invokeWithFallback } from "../llm-router";
 import { SystemMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { saveMindsetPlanTool } from "./tools";
 
 export async function runMindsetArchitect(
-  userId  : string,
+  userId: string,
   userGoal: string,
   context?: {
-    currentChallenges? : string;   // e.g. "procrastination, self-doubt"
-    meditationExp?     : string;   // "none" | "some" | "regular"
-    journaling?        : boolean;
-    therapyHistory?    : boolean;
+    currentChallenges?: string;   // e.g. "procrastination, self-doubt"
+    meditationExp?: string;   // "none" | "some" | "regular"
+    journaling?: boolean;
+    therapyHistory?: boolean;
   }
 ) {
   const tools = [saveMindsetPlanTool(userId)];
@@ -48,18 +48,22 @@ User Context : ${JSON.stringify(context || {})}
 Current Date : ${new Date().toLocaleDateString()}
 
 MISSION:
-1. Identify the core limiting beliefs blocking the user's goal
-2. Design daily mental exercises to rewire negative patterns (be specific with instructions)
-3. Create personalised morning and evening affirmations (write them out fully)
-4. Build a 21-day habit stack for sustained mindset change
-5. Include at least one CBT (Cognitive Behavioural Therapy) reframing technique
-6. Suggest journaling prompts to process emotions and track growth
+1. Identify core limiting beliefs blocking the user's goal
+2. Structure it as a 4-WEEK mindset transformation plan with daily TASKS
+3. Cover mental exercises, affirmations, journaling, and habit building
+
+OUTPUT STRUCTURE:
+You MUST call 'save_mindset_plan' with this structure:
+- goal (string), strategy (optional)
+- weeks: array of { weekNumber, focus, tasks: [{ dayNumber, title, description, type }] }
+- Each week should have 5-7 tasks
+- type options: "habit", "exercise", "journaling", "affirmation"
 
 RULES:
-- Affirmations must be written in first person, present tense, specific to the goal
-- exercises must include step-by-step instructions (e.g. "4-7-8 breathing: inhale 4s, hold 7s, exhale 8s")
-- habits must be tiny and stackable — James Clear "habit stacking" approach
-- Include a "mindset emergency" protocol for when the user feels overwhelmed
+- Affirmations in first person, present tense, specific to the goal
+- Exercises must include step-by-step instructions
+- Habits must be tiny and stackable (James Clear approach)
+- Include a "mindset emergency" task for overwhelm situations
 
 CRITICAL: You MUST call 'save_mindset_plan' to finalise.
 Responding with text only will NOT save anything.`;
@@ -69,20 +73,42 @@ Responding with text only will NOT save anything.`;
     new HumanMessage("Create my personalised mindset transformation plan.")
   ];
 
+  let totalTokensUsed = 0;
+  let totalRequests = 0;
+  const MAX_ITERATIONS = 5;
+  let iterations = 0;
+
   try {
-    while (true) {
+    while (iterations < MAX_ITERATIONS) {
+      iterations++;
+      totalRequests++;
+
+      const startTime = Date.now();
       const response = await invokeWithFallback(tools, messages);
+      const endTime = Date.now();
+
+      const usageMetadata = response?.response_metadata?.usage_metadata;
+      const tokensThisRequest = (usageMetadata as any)?.total_tokens || 0;
+      totalTokensUsed += tokensThisRequest;
+
+      console.log(`[Mindset Architect] API Request ${totalRequests} successful. Took ${endTime - startTime}ms. Tokens: ${tokensThisRequest} (Total Session: ${totalTokensUsed})`);
+
       messages.push(response);
 
-      console.log("[Mindset Agent] tool_calls:", response.tool_calls?.length ?? 0);
-
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.warn("[Mindset Agent] No tool call — returning text response.");
+        const content = typeof response.content === "string" ? response.content : "";
+        if (content.toLowerCase().includes("week") || content.toLowerCase().includes("mindset")) {
+          return {
+            success: true,
+            message: content,
+            isMarkdownPlan: true,
+            stats: { totalRequests, totalTokensUsed }
+          };
+        }
         return {
           success: false,
-          message: typeof response.content === "string"
-            ? response.content
-            : "Mindset plan could not be generated. Please try again.",
+          message: content || "Mindset plan could not be generated.",
+          stats: { totalRequests, totalTokensUsed }
         };
       }
 
@@ -91,22 +117,20 @@ Responding with text only will NOT save anything.`;
         if (!tool) continue;
 
         try {
-          console.log(`[Mindset Agent] Executing tool: ${toolCall.name}`);
-          const output    = await (tool as any).invoke(toolCall.args);
+          const output = await (tool as any).invoke(toolCall.args);
           const outputStr = typeof output === "string" ? output : JSON.stringify(output);
 
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : outputStr,
+            content: outputStr,
           }));
 
           if (toolCall.name === "save_mindset_plan") {
             try {
               const parsed = JSON.parse(outputStr);
-              console.log("[Mindset Agent] ✅ Plan saved. ID:", parsed.planId);
-              return { ...parsed, success: true };
+              return { ...parsed, success: true, stats: { totalRequests, totalTokensUsed } };
             } catch {
-              return { success: true, message: outputStr };
+              return { success: true, message: outputStr, stats: { totalRequests, totalTokensUsed } };
             }
           }
 
@@ -114,7 +138,7 @@ Responding with text only will NOT save anything.`;
           console.error(`[Mindset Agent] Tool error (${toolCall.name}):`, toolError);
           messages.push(new ToolMessage({
             tool_call_id: toolCall.id!,
-            content     : `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
+            content: `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`,
           }));
         }
       }
@@ -125,7 +149,13 @@ Responding with text only will NOT save anything.`;
     return {
       success: false,
       message: "Mindset Architect encountered an error. Please try again.",
-      error  : String(error),
+      error: String(error),
     };
   }
+
+  return {
+    success: false,
+    message: "Max iterations reached without finalizing mindset plan.",
+    stats: { totalRequests, totalTokensUsed }
+  };
 }
