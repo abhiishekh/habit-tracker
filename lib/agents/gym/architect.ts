@@ -34,7 +34,7 @@ export async function generateInitialPlan(userGoal: string, userId: string) {
 }
 
 
-export async function runLifeArchitect(userId: string, userGoal: string, context: { weight: number, height: number, experience: string, refinement?: string }) {
+export async function runGymArchitect(userId: string, userGoal: string, context: { weight: number, height: number, experience: string, refinement?: string }) {
   const writingTool = createWeeklyWorkoutTool(userId);
   const tools = [exerciseResearcherTool, writingTool];
   const modelWithTools = model.bindTools(tools);

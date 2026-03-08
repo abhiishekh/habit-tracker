@@ -1,4 +1,3 @@
-// lib/agents/orchestrator/tools.ts
 
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
@@ -19,6 +18,17 @@ export const classifyGoalTool = new DynamicStructuredTool({
   func: async (args) => {
     // Just pass through the classification — the AI fills this in
     return JSON.stringify(args);
+  }
+});
+
+export const aiGoalClassifierTool = new DynamicStructuredTool({
+  name: "ai_goal_classifier",
+  description: "Classify the user's life goal into a domain.",
+  schema: z.object({
+    goal: z.string()
+  }),
+  func: async ({ goal }) => {
+    return JSON.stringify({ goal });
   }
 });
 
