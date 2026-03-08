@@ -66,7 +66,7 @@ const HeroSection = () => {
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link
-                        href="/todos"
+                        href="/dashboard"
                         className="px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-2xl shadow-indigo-500/30 active:scale-95 hover:cursor-pointer flex items-center gap-2"
                     >
                         Initialize Dashboard

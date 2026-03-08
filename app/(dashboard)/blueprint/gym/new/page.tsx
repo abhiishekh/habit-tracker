@@ -1,13 +1,10 @@
-import { BlueprintForm } from '@/components/blueprint/BlueprintForm'
+import { GymBlueprintForm } from '@/components/blueprint/GymBlueprintForm'
 import React from 'react'
 
-const BlueprintNewPage = () => {
+export default function GymBlueprintNewPage() {
   return (
-    <div className="py-10">
-      <BlueprintForm />
+    <div className="py-12">
+      <GymBlueprintForm />
     </div>
   )
 }
-
-export default BlueprintNewPage
-

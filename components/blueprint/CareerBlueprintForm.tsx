@@ -17,8 +17,9 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { BriefcaseBusiness } from "lucide-react"
+import { Sparkles, BriefcaseBusiness, GraduationCap, Clock, Building2 } from "lucide-react"
 import { UflLoaderInline } from "@/components/ui/ufl-loader"
+import { motion } from "framer-motion"
 
 const formSchema = z.object({
     goal: z.string().min(10, "Describe your career goal briefly."),
@@ -34,7 +35,7 @@ type FormValues = z.infer<typeof formSchema>
 
 export function CareerBlueprintForm() {
     const [isLoading, setIsLoading] = useState(false)
-    const [planData, setPlanData] = useState<any>(null)
+    const [error, setError] = useState<string | null>(null)
     const router = useRouter()
 
     const form = useForm<FormValues>({
@@ -45,13 +46,14 @@ export function CareerBlueprintForm() {
             targetRole: "",
             targetCompany: "",
             currentSkills: "",
-            yearsOfExperience: 0,
+            yearsOfExperience: 2,
             hoursPerWeek: 10,
         },
     })
 
     async function onSubmit(values: FormValues) {
         setIsLoading(true)
+        setError(null)
         try {
             const payload = {
                 userGoal: values.goal,
@@ -74,27 +76,35 @@ export function CareerBlueprintForm() {
             if (data.success && data.planId) {
                 router.push(`/blueprint/career/${data.planId}`)
             } else {
-                console.error("Failed to generate:", data);
-                setPlanData(data)
+                setError(data.message || "Career Architect encountered an error.")
             }
         } catch (error) {
-            console.error("Agent failed:", error)
+            console.error("Career Agent failed:", error)
+            setError("Connection error. Please try again.")
         } finally {
             setIsLoading(false)
         }
     }
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-card rounded-xl border shadow-sm">
-            <div className="mb-8 space-y-2">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <BriefcaseBusiness className="text-amber-500 w-6 h-6" />
-                    Career Mentor AI
-                </h2>
-                <p className="text-muted-foreground">Architect a step-by-step roadmap to transition from your current position to your dream role.</p>
-            </div>
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-3xl mx-auto p-1 bg-gradient-to-br from-amber-600/20 via-border to-amber-600/10 rounded-3xl"
+        >
+            <div className="bg-card p-8 md:p-10 rounded-[1.4rem] shadow-2xl space-y-10">
+                <div className="flex flex-col md:flex-row md:items-center gap-6">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-amber-600/10 text-amber-600 shadow-inner">
+                        <BriefcaseBusiness className="w-8 h-8" />
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-extrabold tracking-tight font-heading">Career Mentor AI</h2>
+                        <p className="text-muted-foreground text-lg leading-relaxed">Architect a step-by-step roadmap to transition from your current position to your dream role.</p>
+                    </div>
+                </div>
 
-            {!planData ? (
+                <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -103,9 +113,9 @@ export function CareerBlueprintForm() {
                                 name="currentRole"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Current Role</FormLabel>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Current Role</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="e.g. Graphic Designer" {...field} />
+                                            <Input placeholder="e.g. Graphic Designer" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -116,9 +126,9 @@ export function CareerBlueprintForm() {
                                 name="targetRole"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Target Role</FormLabel>
+                                        <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Target Role</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="e.g. UI/UX Product Designer" {...field} />
+                                            <Input placeholder="e.g. UI/UX Product Designer" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -132,9 +142,12 @@ export function CareerBlueprintForm() {
                                 name="targetCompany"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Dream Company (Optional)</FormLabel>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Dream Company</FormLabel>
+                                        </div>
                                         <FormControl>
-                                            <Input placeholder="e.g. Google, Stripe" {...field} />
+                                            <Input placeholder="e.g. Stripe, Google" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -145,9 +158,12 @@ export function CareerBlueprintForm() {
                                 name="yearsOfExperience"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Years Exp.</FormLabel>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
+                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Years Exp.</FormLabel>
+                                        </div>
                                         <FormControl>
-                                            <Input type="number" {...field} />
+                                            <Input type="number" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -158,9 +174,12 @@ export function CareerBlueprintForm() {
                                 name="hoursPerWeek"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Hours/Week to Commit</FormLabel>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                                            <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Hours/Week</FormLabel>
+                                        </div>
                                         <FormControl>
-                                            <Input type="number" {...field} />
+                                            <Input type="number" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -173,9 +192,9 @@ export function CareerBlueprintForm() {
                             name="currentSkills"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Current Hard & Soft Skills</FormLabel>
+                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">Current Skills</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="e.g. Adobe Suite, Figma basics, Sketch, Communication" {...field} />
+                                        <Input placeholder="e.g. React, Figma, Communication (comma separated)" className="h-12 bg-muted/20 border-border/50 focus:border-amber-600/50 rounded-xl" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -187,11 +206,14 @@ export function CareerBlueprintForm() {
                             name="goal"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>What is your specific career goal?</FormLabel>
+                                    <FormLabel className="text-xs font-bold uppercase tracking-widest text-amber-600 flex items-center gap-2">
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        Transition Objective
+                                    </FormLabel>
                                     <FormControl>
                                         <Textarea
                                             placeholder="e.g. I want to transition from print design to digital product design and land a junior role at a fintech startup within 6 months."
-                                            className="min-h-[100px]"
+                                            className="min-h-[120px] bg-amber-600/[0.02] border-amber-600/20 focus:border-amber-600 rounded-2xl"
                                             {...field}
                                         />
                                     </FormControl>
@@ -200,31 +222,25 @@ export function CareerBlueprintForm() {
                             )}
                         />
 
-                        <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 text-white" disabled={isLoading}>
+                        {error && (
+                            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-center text-destructive text-sm font-semibold">
+                                {error}
+                            </div>
+                        )}
+
+                        <Button type="submit" className="w-full h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl shadow-lg shadow-amber-600/20" disabled={isLoading}>
                             {isLoading ? (
-                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Analyzing Job Market & Mapping Plan...</>
+                                <><UflLoaderInline style="flip" compact={true} className="mr-2" /> Mapping Career Leap...</>
                             ) : (
-                                "Generate Career Roadmap"
+                                <span className="flex items-center gap-2">
+                                    <GraduationCap className="w-5 h-5" />
+                                    Generate Career Roadmap
+                                </span>
                             )}
                         </Button>
                     </form>
                 </Form>
-            ) : (
-                // planData only set on error (success redirects away)
-                <div className="p-6 bg-destructive/10 border border-destructive/20 rounded-xl text-center space-y-4">
-                    <p className="text-destructive font-semibold">Something went wrong generating your plan.</p>
-                    <pre className="text-left text-xs overflow-auto max-h-64 p-4 bg-muted rounded-md border">
-                        {JSON.stringify(planData, null, 2)}
-                    </pre>
-                    <button
-                        onClick={() => setPlanData(null)}
-                        className="text-sm underline text-muted-foreground hover:text-foreground"
-                    >
-                        Try again
-                    </button>
-                </div>
-            )
-            }
-        </div >
+            </div>
+        </motion.div>
     )
 }

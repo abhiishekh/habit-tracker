@@ -2,8 +2,10 @@
 import { model } from "@/lib/gemini";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
+import { invokeWithFallback } from "../llm-router";
 import { HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
 import { createWeeklyWorkoutTool, exerciseResearcherTool } from "./tools";
+
 
 // 1. Define the Tool: How the AI talks to Prisma
 const createTodoTool = new DynamicStructuredTool({
@@ -33,11 +35,9 @@ export async function generateInitialPlan(userGoal: string, userId: string) {
   return res;
 }
 
-
-export async function runLifeArchitect(userId: string, userGoal: string, context: { weight: number, height: number, experience: string, refinement?: string }) {
+export async function runGymArchitect(userId: string, userGoal: string, context: { weight: number, height: number, experience: string, refinement?: string }) {
   const writingTool = createWeeklyWorkoutTool(userId);
   const tools = [exerciseResearcherTool, writingTool];
-  const modelWithTools = model.bindTools(tools);
 
   const missionPrompt = `You are a Senior Gym Trainer and Exercise Scientist. 
     User Context: Weight ${context.weight}kg, Height ${context.height}cm, Level: ${context.experience}.
@@ -65,35 +65,36 @@ export async function runLifeArchitect(userId: string, userGoal: string, context
     new HumanMessage(context.refinement ? "Refine my gym workout plan based on the feedback." : "Generate my expert 7-day Gym Workout Plan with exercises, sets, and reps.")
   ];
 
-  try {
-    let iterations = 0;
-    const MAX_ITERATIONS = 5;
+  let totalTokensUsed = 0;
+  let totalRequests = 0;
+  const MAX_ITERATIONS = 5;
+  let iterations = 0;
 
+  try {
     while (iterations < MAX_ITERATIONS) {
       iterations++;
-      const response = await modelWithTools.invoke(messages);
+      totalRequests++;
 
-      if (!response) {
-        throw new Error("AI Model returned an empty response. This might be due to model service issues or safety filters.");
-      }
+      const startTime = Date.now();
+      const response = await invokeWithFallback(tools, messages);
+      const endTime = Date.now();
+
+      const usageMetadata = response?.response_metadata?.usage_metadata;
+      const tokensThisRequest = (usageMetadata as any)?.total_tokens || 0;
+      totalTokensUsed += tokensThisRequest;
+
+      console.log(`[Gym Architect] API Request ${totalRequests} successful. Took ${endTime - startTime}ms. Tokens: ${tokensThisRequest} (Total Session: ${totalTokensUsed})`);
 
       messages.push(response);
 
-      console.log("AI Response Content:", response.content);
-      if (response.tool_calls && response.tool_calls.length > 0) {
-        console.log(`--- [Agent] AI requested ${response.tool_calls.length} tool calls ---`);
-      }
-
       if (!response.tool_calls || response.tool_calls.length === 0) {
-        console.log("--- [Agent] No more tool calls. Checking for markdown plan. ---");
         const content = typeof response.content === 'string' ? response.content : "";
-
-        // If content looks like a workout plan (contains "Day" or "Exercise"), consider it a success fallback
         if (content.toLowerCase().includes("day") || content.toLowerCase().includes("exercise")) {
           return {
             success: true,
             message: content,
             isMarkdownPlan: true,
+            stats: { totalRequests, totalTokensUsed },
             justifications: {
               userWant: userGoal,
               ourUnderstanding: "Generated markdown plan as fallback.",
@@ -106,6 +107,7 @@ export async function runLifeArchitect(userId: string, userGoal: string, context
         return {
           success: false,
           message: content || "AI failed to finalize a structured plan.",
+          stats: { totalRequests, totalTokensUsed },
           justifications: {
             userWant: "Analysis in progress...",
             ourUnderstanding: content || "Technical analysis was provided without tool calls.",
@@ -118,11 +120,9 @@ export async function runLifeArchitect(userId: string, userGoal: string, context
       for (const toolCall of response.tool_calls) {
         const tool = tools.find(t => t.name === toolCall.name);
         if (tool) {
-          console.log(`--- [Agent] Executing Tool: ${tool.name} with args:`, toolCall.args);
           try {
             const output = await (tool as any).invoke(toolCall.args);
             const outputString = typeof output === 'string' ? output : JSON.stringify(output);
-            console.log(`--- [Agent] Tool ${tool.name} Output (truncated): ---`, outputString.substring(0, 300));
 
             messages.push(new ToolMessage({
               tool_call_id: toolCall.id!,
@@ -132,18 +132,16 @@ export async function runLifeArchitect(userId: string, userGoal: string, context
             if (tool.name === "save_weekly_workout_plan") {
               try {
                 const parsed = JSON.parse(outputString);
-                console.log("--- [Agent] Successfully processed save tool. ---");
-                return { ...parsed, success: true };
+                return { ...parsed, success: true, stats: { totalRequests, totalTokensUsed } };
               } catch (e) {
-                // If it's a string from the tool showing success, return it
                 if (outputString.toLowerCase().includes("success")) {
-                  return { success: true, message: outputString };
+                  return { success: true, message: outputString, stats: { totalRequests, totalTokensUsed } };
                 }
-                return { success: false, message: "Save tool output was invalid.", error: outputString };
+                return { success: false, message: "Save tool output was invalid.", error: outputString, stats: { totalRequests, totalTokensUsed } };
               }
             }
           } catch (toolError) {
-            console.error(`--- [Agent] Tool ${tool.name} execution error:`, toolError);
+            console.error(`--- [Gym Agent] Tool ${tool.name} execution error:`, toolError);
             messages.push(new ToolMessage({
               tool_call_id: toolCall.id!,
               content: `Error: ${toolError instanceof Error ? toolError.message : String(toolError)}`
@@ -153,16 +151,17 @@ export async function runLifeArchitect(userId: string, userGoal: string, context
       }
     }
   } catch (error) {
-    console.error("Critical AI Controller Error:", error);
+    console.error("Gym Architect Error:", error);
     return {
       success: false,
-      message: "The AI Coach encountered a brain freeze. This can happen with very complex requests. Try refreshing or simplifying your goal.",
-      justifications: {
-        userWant: "Error during generation",
-        ourUnderstanding: String(error),
-        whatWhyGiving: "Service interruption",
-        whyBestForGoal: "Please try again."
-      }
+      message: "The AI Coach encountered a brain freeze. Please try again.",
+      stats: { totalRequests, totalTokensUsed }
     };
   }
+
+  return {
+    success: false,
+    message: "Max iterations reached without finalizing gym plan.",
+    stats: { totalRequests, totalTokensUsed }
+  };
 }
