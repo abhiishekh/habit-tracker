@@ -48,7 +48,7 @@ const DashboardSidebar = () => {
 
             {/* ── MOBILE / TABLET BOTTOM NAV (< lg) ────────────────────────── */}
             <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-zinc-950 border-t border-slate-200 dark:border-zinc-800 flex items-stretch h-16 safe-bottom">
-                {navItems.slice(0, 6).map((item) => {
+                {navItems.slice(0, 7).map((item) => {
                     const Icon = item.icon;
                     const active = pathname === item.href || pathname.startsWith(item.href + '/');
                     return (
