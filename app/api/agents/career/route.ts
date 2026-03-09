@@ -1,5 +1,6 @@
 import { runCareerArchitect } from "@/lib/agents/career/architect";
 import { NextRequest, NextResponse } from "next/server";
+import { hasReachedBlueprintLimit } from '@/lib/subscription';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -9,6 +10,11 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+        const limitReached = await hasReachedBlueprintLimit(session.user.id);
+        if (limitReached) {
+            return NextResponse.json({ error: "Blueprint generation limit reached. Upgrade to Pro for unlimited AI blueprints." }, { status: 403 });
+        }
 
     const { userGoal, context } = await req.json();
     const result = await runCareerArchitect(session.user.id, userGoal, context);

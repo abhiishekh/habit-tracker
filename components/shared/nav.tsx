@@ -1,7 +1,7 @@
 "use client"
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { LogIn, LogOut, User as UserIcon, Settings, Phone, LayoutDashboard, Shield } from 'lucide-react'
 import { AuthModal } from '../auth/auth-modal'
@@ -17,12 +17,31 @@ import {
 const Nav = () => {
     const pathname = usePathname()
     const [isAuthOpen, setIsAuthOpen] = useState(false)
+    const [isPro, setIsPro] = useState(false)
     const { data: session, status } = useSession()
 
     const isLoggedIn = status === "authenticated"
     const userInitials = session?.user?.name
         ? session.user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
         : session?.user?.email?.[0].toUpperCase() || "U"
+
+    useEffect(() => {
+        if (!isLoggedIn) return
+
+        const fetchPlan = async () => {
+            try {
+                const res = await fetch("/api/subscription/limits")
+                if (!res.ok) return
+
+                const data = await res.json()
+                setIsPro(data.isPro)
+            } catch (err) {
+                console.error("Failed to fetch subscription:", err)
+            }
+        }
+
+        fetchPlan()
+    }, [isLoggedIn])
 
     return (
         <>
@@ -37,6 +56,11 @@ const Nav = () => {
 
                         {isLoggedIn ? (
                             <DropdownMenu>
+                                {isPro && (
+                                    <span className="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
+                                        PRO
+                                    </span>
+                                )}
                                 <DropdownMenuTrigger asChild>
                                     <div className="h-8 w-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center cursor-pointer hover:bg-indigo-500/20 transition-all text-indigo-600 dark:text-indigo-400 font-bold text-xs">
                                         {session?.user?.image ? (

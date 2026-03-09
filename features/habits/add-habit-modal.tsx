@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
-export function AddHabitModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; onClose: () => void; limits?: any }) {
     const router = useRouter();
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -86,68 +86,84 @@ export function AddHabitModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Habit Name</label>
-                                <input
-                                    autoFocus
-                                    placeholder="e.g. Read 20 pages"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl p-4 text-lg font-medium outline-none placeholder:text-slate-300 dark:placeholder:text-zinc-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all"
-                                    required
-                                />
+                        {limits?.habits?.hasReachedLimit ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <div className="h-16 w-16 bg-rose-100 dark:bg-rose-900/30 text-rose-500 rounded-full flex items-center justify-center mb-4">
+                                    <Target size={32} />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Habit Limit Reached</h3>
+                                <p className="text-slate-500 mb-6">You've reached the maximum number of active habits ({limits.habits.max}) for the Free plan.</p>
+                                <button
+                                    onClick={() => router.push('/billing')}
+                                    className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-500/25 transition-all focus:scale-95"
+                                >
+                                    Upgrade to Pro
+                                </button>
                             </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Description (Optional)</label>
-                                <textarea
-                                    placeholder="Why is this important?"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl p-4 text-sm outline-none placeholder:text-slate-300 dark:placeholder:text-zinc-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all h-24 resize-none"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Category</label>
-                                    <Select value={category} onValueChange={setCategory}>
-                                        <SelectTrigger className="h-12 rounded-2xl border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 focus:ring-indigo-500/5">
-                                            <SelectValue placeholder="Category" />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-                                            <SelectItem value="Growth">Growth</SelectItem>
-                                            <SelectItem value="Fitness">Fitness</SelectItem>
-                                            <SelectItem value="Code">Code</SelectItem>
-                                            <SelectItem value="Freelance">Freelance</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Habit Name</label>
+                                    <input
+                                        autoFocus
+                                        placeholder="e.g. Read 20 pages"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl p-4 text-lg font-medium outline-none placeholder:text-slate-300 dark:placeholder:text-zinc-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all"
+                                        required
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Frequency</label>
-                                    <Select value={frequency} onValueChange={setFrequency}>
-                                        <SelectTrigger className="h-12 rounded-2xl border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 focus:ring-indigo-500/5">
-                                            <SelectValue placeholder="Frequency" />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-                                            <SelectItem value="daily">Daily</SelectItem>
-                                            <SelectItem value="weekly">Weekly</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Description (Optional)</label>
+                                    <textarea
+                                        placeholder="Why is this important?"
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl p-4 text-sm outline-none placeholder:text-slate-300 dark:placeholder:text-zinc-700 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all h-24 resize-none"
+                                    />
                                 </div>
-                            </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-4 mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                            >
-                                {loading && <UflLoaderInline style="flip" compact={true} className="mr-2" />}
-                                {loading ? "Creating..." : "Set Ritual"}
-                            </button>
-                        </form>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Category</label>
+                                        <Select value={category} onValueChange={setCategory}>
+                                            <SelectTrigger className="h-12 rounded-2xl border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 focus:ring-indigo-500/5">
+                                                <SelectValue placeholder="Category" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-2xl border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                                                <SelectItem value="Growth">Growth</SelectItem>
+                                                <SelectItem value="Fitness">Fitness</SelectItem>
+                                                <SelectItem value="Code">Code</SelectItem>
+                                                <SelectItem value="Freelance">Freelance</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Frequency</label>
+                                        <Select value={frequency} onValueChange={setFrequency}>
+                                            <SelectTrigger className="h-12 rounded-2xl border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 focus:ring-indigo-500/5">
+                                                <SelectValue placeholder="Frequency" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-2xl border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                                                <SelectItem value="daily">Daily</SelectItem>
+                                                <SelectItem value="weekly">Weekly</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-4 mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-500/20 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {loading && <UflLoaderInline style="flip" compact={true} className="mr-2" />}
+                                    {loading ? "Creating..." : "Set Ritual"}
+                                </button>
+                            </form>
+                        )}
                     </motion.div>
                 </>
             )}

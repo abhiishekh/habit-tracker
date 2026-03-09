@@ -1,5 +1,6 @@
 import { runLifeArchitect } from "@/lib/agents/life/architect";
 import { NextResponse } from "next/server";
+import { hasReachedBlueprintLimit } from '@/lib/subscription';
 
 export async function POST(req: Request) {
     try {
@@ -13,3 +14,4 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: false, message: "Architecture Failed" }, { status: 500 });
     }
 }
+

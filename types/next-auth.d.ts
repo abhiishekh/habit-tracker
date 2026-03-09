@@ -6,19 +6,30 @@ declare module "next-auth" {
      */
     interface Session {
         user: {
-            /** The user's postal address. */
             id: string
-            phone?: string | null
+            phone?: string
             whatsappEnabled?: boolean
-            wakatimeApiKey?: string | null
-            githubApiKey?: string | null
+            wakatimeApiKey?: string
+            githubApiKey?: string
         } & DefaultSession["user"]
     }
 
     interface User {
-        phone?: string | null
+        id: string
+        phone?: string
         whatsappEnabled?: boolean
-        wakatimeApiKey?: string | null
-        githubApiKey?: string | null
+        wakatimeApiKey?: string
+        githubApiKey?: string
+        password?: string
+    }
+}
+
+declare module "next-auth/jwt" {
+    interface JWT {
+        id: string
+        phone?: string
+        whatsappEnabled?: boolean
+        wakatimeApiKey?: string
+        githubApiKey?: string
     }
 }
