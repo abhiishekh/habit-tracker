@@ -21,8 +21,10 @@ import {
     Zap,
     Scale,
     LifeBuoy,
+    Lock,
 } from "lucide-react";
 import { UflLoaderInline } from "@/components/ui/ufl-loader";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -154,15 +156,23 @@ const blueprintTypeConfig: Record<string, { icon: any; color: string; badgeColor
 };
 
 export default function BlueprintHubPage() {
+    const router = useRouter()
     const [activeBlueprints, setActiveBlueprints] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [limits, setLimits] = useState<any>(null)
 
     useEffect(() => {
         const fetch_ = async () => {
             try {
-                const res = await fetch('/api/dashboard/active-blueprints')
-                const data = await res.json()
-                if (data.success) setActiveBlueprints(data.blueprints)
+                const [bpRes, limRes] = await Promise.all([
+                    fetch('/api/dashboard/active-blueprints'),
+                    fetch('/api/subscription/limits')
+                ])
+                const bpData = await bpRes.json()
+                const limData = await limRes.json()
+
+                if (bpData.success) setActiveBlueprints(bpData.blueprints)
+                if (limRes.ok) setLimits(limData)
             } catch (err) {
                 console.error("Failed to fetch active blueprints:", err)
             } finally {
@@ -189,9 +199,15 @@ export default function BlueprintHubPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {agents.map((agent) => {
                     const Icon = agent.icon;
+                    const isLocked = limits?.blueprints?.hasReachedLimit;
+
                     return (
-                        <Link key={agent.title} href={agent.href}>
-                            <Card className="group relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 border-border/50 bg-card cursor-pointer h-full">
+                        <div
+                            key={agent.title}
+                            onClick={() => isLocked ? router.push('/billing') : router.push(agent.href)}
+                            className="h-full"
+                        >
+                            <Card className={`group relative overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 border-border/50 bg-card cursor-pointer h-full ${isLocked ? 'opacity-70 grayscale-[0.2]' : ''}`}>
                                 {/* Background Gradient */}
                                 <div className={`absolute inset-0 bg-gradient-to-br ${agent.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
@@ -200,11 +216,18 @@ export default function BlueprintHubPage() {
                                         <div className={`p-4 rounded-2xl bg-background shadow-sm border ${agent.iconColor}`}>
                                             <Icon className="w-8 h-8" />
                                         </div>
-                                        {agent.badge && (
-                                            <Badge variant={agent.badge === "New" ? "default" : "secondary"} className="shadow-sm">
-                                                {agent.badge}
-                                            </Badge>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {isLocked && (
+                                                <Badge variant="destructive" className="shadow-sm gap-1">
+                                                    <Lock className="w-3 h-3" /> Locked
+                                                </Badge>
+                                            )}
+                                            {agent.badge && !isLocked && (
+                                                <Badge variant={agent.badge === "New" ? "default" : "secondary"} className="shadow-sm">
+                                                    {agent.badge}
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="space-y-2">
@@ -217,13 +240,22 @@ export default function BlueprintHubPage() {
                                     </div>
 
                                     <div className="pt-4 flex items-center text-sm font-semibold text-primary/80 group-hover:text-primary transition-colors">
-                                        <Sparkles className="w-4 h-4 mr-2" />
-                                        Start generating
-                                        <ArrowRight className="w-4 h-4 ml-1 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+                                        {isLocked ? (
+                                            <>
+                                                <Lock className="w-4 h-4 mr-2 text-rose-500" />
+                                                <span className="text-rose-500">Upgrade to Pro to unlock</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="w-4 h-4 mr-2" />
+                                                Start generating
+                                                <ArrowRight className="w-4 h-4 ml-1 opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+                                            </>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
-                        </Link>
+                        </div>
                     );
                 })}
             </div>

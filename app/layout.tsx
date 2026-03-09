@@ -30,12 +30,15 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from "@/components/providers/Providers";
+import { fetchUserSubscriptionTier } from "./action";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { plan } = await fetchUserSubscriptionTier();
+  const isPro = plan === "pro";
   return (
     <html lang="en" className={myCustomFont.variable}>
       <body

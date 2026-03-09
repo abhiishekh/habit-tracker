@@ -10,6 +10,7 @@ export default function HabitsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [habits, setHabits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [limits, setLimits] = useState<any>(null);
 
   const fetchHabits = async () => {
     try {
@@ -25,8 +26,16 @@ export default function HabitsPage() {
     }
   };
 
+  const fetchLimits = async () => {
+    try {
+      const res = await fetch("/api/subscription/limits");
+      if (res.ok) setLimits(await res.json());
+    } catch (e) { console.error(e); }
+  };
+
   useEffect(() => {
     fetchHabits();
+    fetchLimits();
   }, []);
 
   return (
@@ -100,9 +109,11 @@ export default function HabitsPage() {
 
       <AddHabitModal
         isOpen={isModalOpen}
+        limits={limits}
         onClose={() => {
           setIsModalOpen(false);
           fetchHabits();
+          fetchLimits();
         }}
       />
     </div>

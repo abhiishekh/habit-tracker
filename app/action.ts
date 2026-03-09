@@ -98,3 +98,132 @@ export async function toggleGlobalWhatsapp(enabled: boolean) {
     create: { key: 'whatsapp_global_enabled', value: String(enabled) }
   });
 }
+
+import { DEFAULT_SUBSCRIPTION_CONFIG } from '@/lib/constants';
+
+export async function getSubscriptionConfig() {
+  const keys = Object.keys(DEFAULT_SUBSCRIPTION_CONFIG);
+  const configs = await prisma.systemConfig.findMany({
+    where: { key: { in: keys } }
+  });
+
+  const result = { ...DEFAULT_SUBSCRIPTION_CONFIG };
+  configs.forEach(c => {
+    if (c.key in result) {
+      result[c.key as keyof typeof DEFAULT_SUBSCRIPTION_CONFIG] = c.value;
+    }
+  });
+
+  return result;
+}
+
+export async function updateSubscriptionConfig(data: typeof DEFAULT_SUBSCRIPTION_CONFIG) {
+  const session = await getServerSession(authOptions);
+  const adminEmail = "abhisheaurya@gmail.com";
+
+  if (session?.user?.email !== adminEmail) {
+    throw new Error("Unauthorized: Only admin can update global settings");
+  }
+
+  const updates = Object.entries(data).map(([key, value]) => {
+    return prisma.systemConfig.upsert({
+      where: { key },
+      update: { value: String(value) },
+      create: { key, value: String(value) }
+    });
+  });
+
+  await prisma.$transaction(updates);
+  return true;
+}
+
+export async function fetchUserSubscriptionTier() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return { plan: 'free' };
+  const { getSubscriptionLimits } = await import('@/lib/subscription');
+  const limits = await getSubscriptionLimits(session.user.id);
+  return { plan: limits.isPro ? 'pro' : 'free' };
+}
+
+export async function getAdminDashboardStats() {
+  const session = await getServerSession(authOptions);
+  const adminEmail = "abhisheaurya@gmail.com";
+
+  if (session?.user?.email !== adminEmail) {
+    throw new Error("Unauthorized");
+  }
+
+  // Basic counters
+  const totalUsers = await prisma.user.count();
+
+  // A "Pro" user in our system has an 'active' or 'trialing' subscription
+  const proUsers = await prisma.subscription.count({
+    where: {
+      status: { in: ['active', 'trialing'] }
+    }
+  });
+
+  const freeUsers = totalUsers - proUsers;
+
+  // Chart data: Users joined in the last 30 days grouped by date
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  // Note: MongoDB/Prisma direct date grouping requires raw query or manual aggregation. 
+  // We will fetch recent users and group them manually in JS to be safe and cross-DB compatible.
+  const recentUsers = await prisma.user.findMany({
+    where: {
+      // Only count objects created after 30 days ago.
+      // Because MongoDB stores ObjectIds which encode timestamps, we ideally just filter by it, 
+      // but assuming `createdAt` is explicitly available or we fetch all recent and group:
+      // If User doesn't have createdAt, we can approximate using id timestamp for Mongo, 
+      // but typically `emailVerified` or related tables have it. 
+      // Since User model doesn't have an explicit createdAt, we fetch all users and filter by ObjectId timestamp.
+    },
+    select: { id: true, email: true }
+  });
+
+  // Since prisma string ObjectIds contain timestamps (first 8 chars in hex):
+  const groupedData: Record<string, { date: string; free: number; paid: number }> = {};
+
+  // Initialize last 30 days
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    groupedData[dateStr] = { date: dateStr, free: 0, paid: 0 };
+  }
+
+  // We need to know who is paid. Let's fetch active subscriptions to correlate
+  const activeSubs = await prisma.subscription.findMany({
+    where: { status: { in: ['active', 'trialing'] } },
+    select: { userId: true }
+  });
+  const paidUserIds = new Set(activeSubs.map(s => s.userId));
+
+  recentUsers.forEach(user => {
+    // Extract timestamp from mongo ObjectId:
+    const timestamp = parseInt(user.id.substring(0, 8), 16) * 1000;
+    const userDate = new Date(timestamp);
+
+    if (userDate >= thirtyDaysAgo) {
+      const dateStr = userDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (groupedData[dateStr]) {
+        if (paidUserIds.has(user.id)) {
+          groupedData[dateStr].paid += 1;
+        } else {
+          groupedData[dateStr].free += 1;
+        }
+      }
+    }
+  });
+
+  const chartData = Object.values(groupedData);
+
+  return {
+    totalUsers,
+    proUsers,
+    freeUsers,
+    chartData
+  };
+}

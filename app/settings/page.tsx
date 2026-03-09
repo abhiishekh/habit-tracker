@@ -4,7 +4,7 @@ import { Smartphone, User, Bell, Shield, Trash2, Save, Send, Github, Code2, Exte
 import PhoneVerification from '@/components/PhoneVerification';
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import { updateUserProfile, sendTestWhatsapp, toggleWhatsapp, saveUserApiKeys } from '@/app/action';
+import { updateUserProfile, sendTestWhatsapp, toggleWhatsapp, saveUserApiKeys, fetchUserSubscriptionTier } from '@/app/action';
 import { toast } from 'sonner';
 import Link from 'next/link';
 
@@ -19,6 +19,17 @@ export default function SettingsPage() {
   const [linkedinKey, setLinkedinKey] = useState('');
   const [twitterKey, setTwitterKey] = useState('');
   const [integrationsLoading, setIntegrationsLoading] = useState(false);
+  const [isPro, setIsPro] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const fetchSubStatus = async () => {
+      if ((session?.user as any)?.id) {
+        const limits = await fetchUserSubscriptionTier();
+        setIsPro(limits.plan === 'pro');
+      }
+    };
+    fetchSubStatus();
+  }, [(session?.user as any)?.id]);
 
   useEffect(() => {
     if (session?.user) {
@@ -135,6 +146,42 @@ export default function SettingsPage() {
             </div>
           </form>
         </section>
+
+        {/* Subscription Tier Banner */}
+        {isPro !== null && (
+          <section className={`border rounded-2xl p-6 shadow-sm overflow-hidden relative ${isPro ? 'bg-indigo-50 border-indigo-200 dark:bg-indigo-900/10 dark:border-indigo-800/30' : 'bg-gradient-to-r from-slate-900 to-indigo-900 border-slate-800 dark:border-zinc-800'}`}>
+            {isPro ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="p-3 bg-indigo-100 dark:bg-indigo-500/20 rounded-xl">
+                    <Shield className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">Pro Member</h2>
+                      <span className="px-2 py-0.5 rounded bg-indigo-600 text-white text-[10px] font-black tracking-widest uppercase">Active</span>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">You have unlocked all premium features and the AI Agent Army.</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10 text-white">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="text-xl font-bold">Free Tier</h2>
+                    <span className="px-2 py-0.5 rounded bg-white/20 text-white text-[10px] font-bold uppercase">Basic</span>
+                  </div>
+                  <p className="text-slate-300 text-sm max-w-sm">Upgrade to Pro to unlock unlimited habit tracking, all AI Blueprints, and global WhatsApp reminders.</p>
+                </div>
+                <Link href="/billing" className="px-6 py-3 bg-white text-indigo-900 font-bold rounded-xl hover:bg-slate-100 transition-all shadow-lg active:scale-95 whitespace-nowrap">
+                  Upgrade Option
+                </Link>
+              </div>
+            )}
+            {!isPro && <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 blur-3xl -mr-20 -mt-20 rounded-full z-0" />}
+          </section>
+        )}
 
         {/* WhatsApp & Notifications Section */}
         <section className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">

@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 
+import { hasReachedHabitLimit } from "@/lib/subscription";
+
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
@@ -17,6 +19,14 @@ export async function POST(req: NextRequest) {
 
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        const limitReached = await hasReachedHabitLimit(user.id);
+        if (limitReached) {
+            return NextResponse.json(
+                { error: "Free plan limit reached. Upgrade to Pro for unlimited habits." },
+                { status: 403 }
+            );
         }
 
         const { name, description, category, frequency } = await req.json();
