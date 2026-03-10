@@ -85,6 +85,7 @@ model User {
   blueprintTasks     BlueprintTask[]
   lifePlans          LifePlan[]
   subscription       Subscription?
+  challenges         Challenge[]
 }
 
 model Habit {
@@ -93,9 +94,10 @@ model Habit {
   name        String
   description String?
   category    String?
-  frequency   String   @default("daily") // daily, weekly
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  frequency       String   @default("daily") // daily, weekly
+  autoCreateTodos Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs HabitLog[]
@@ -136,6 +138,8 @@ model Todo {
   whatsappNotified Boolean   @default(false)
   completed        Boolean   @default(false)
   completedAt      DateTime?
+  habitId          String?   @db.ObjectId
+  challengeId      String?   @db.ObjectId
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -766,6 +770,23 @@ model Subscription {
   cancelAtPeriodEnd      Boolean   @default(false)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Challenge {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  title        String
+  focus        String
+  description  String?
+  durationDays Int      @default(90)
+  autoCreateTodos Boolean @default(false)
+  startDate    DateTime @default(now())
+  endDate      DateTime
+  status       String   @default("active") // active, completed, failed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

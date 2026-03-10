@@ -29,13 +29,13 @@ const HeroSection = () => {
             />
 
             <div className="absolute top-40 -left-10 md:left-20 animate-bounce duration-[3s] opacity-20 md:opacity-100 italic">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl shadow-indigo-500/10">
+                <div className="z-50 flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl shadow-indigo-500/10">
                     <MessageSquare size={16} className="text-emerald-500" />
                     <span className="text-xs font-bold font-mono">Logged: 2h Coding</span>
                 </div>
             </div>
 
-            <div className="absolute bottom-40 -right-10 md:right-20 animate-pulse opacity-20 md:opacity-100 italic">
+            <div className="z-50 absolute bottom-40 -right-10 md:right-20 animate-pulse opacity-20 md:opacity-100 italic">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl shadow-indigo-500/10 transform rotate-6">
                     <Sparkles size={16} className="text-amber-500" />
                     <span className="text-xs font-bold font-mono">Leveling Up...</span>
@@ -49,12 +49,14 @@ const HeroSection = () => {
 
                 <div className="flex flex-col items-center gap-6 mb-12 text-center px-4">
                     {/* Killer Feature Badge */}
-                    <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-50/50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-black uppercase tracking-widest shadow-xl shadow-emerald-500/5">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        WhatsApp Sync Active
+                    <div className='border border-emerald-300 rounded-full p-1'>
+                        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-50/50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-black uppercase tracking-widest shadow-2xl shadow-emerald-500/5 ">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            WhatsApp Sync Active
+                        </div>
                     </div>
 
                     <h2 className="text-xl md:text-2xl text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
@@ -69,14 +71,14 @@ const HeroSection = () => {
                         href="/dashboard"
                         className="px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-2xl shadow-indigo-500/30 active:scale-95 hover:cursor-pointer flex items-center gap-2"
                     >
-                        Initialize Dashboard
+                        Start Today
                         <ArrowRight size={18} />
                     </Link>
                     <Link
                         href="/journey"
                         className="px-10 py-5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-900 dark:text-white font-bold rounded-2xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all hover:cursor-pointer shadow-lg"
                     >
-                        View Public Progress
+                        View Progress
                     </Link>
                 </div>
 

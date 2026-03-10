@@ -1,6 +1,6 @@
 "use client"
 
-import { Code2, Dumbbell, Flame, InfoIcon, LayoutDashboard, List, Bot, CreditCard } from 'lucide-react';
+import { Code2, Dumbbell, Flame, InfoIcon, LayoutDashboard, List, Bot, CreditCard, Target } from 'lucide-react';
 import { usePathname } from 'next/navigation'
 import React from 'react'
 import clsx from 'clsx'
@@ -10,6 +10,7 @@ const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Workouts", href: "/workouts", icon: Dumbbell },
     { name: "Habits", href: "/habits", icon: Flame },
+    { name: "Challenges", href: "/challenges", icon: Target },
     { name: "Todos", href: "/todos", icon: List },
     { name: "Insights", href: "/insights", icon: InfoIcon },
     { name: "Coding", href: "/coding", icon: Code2 },

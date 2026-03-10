@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { startOfDay, subDays, endOfDay, format } from "date-fns";
+import { any } from "zod";
 
 export async function GET() {
     try {
@@ -15,7 +16,7 @@ export async function GET() {
         const sevenDaysAgo = startOfDay(subDays(new Date(), 6));
 
         // 1. Fetch data in parallel
-        const [habits, todos, workouts, wakatime, incomePlans] = await Promise.all([
+        const [habitsFromDb, todos, workouts, wakatime, incomePlans, activeChallenge, autoHabits] = await Promise.all([
             prisma.habit.findMany({
                 where: { userId },
                 include: { logs: { where: { date: { gte: sevenDaysAgo } } } }
@@ -37,13 +38,75 @@ export async function GET() {
             prisma.incomePlan.findMany({
                 where: { userId, isActive: true },
                 include: { weeks: { include: { tasks: true } } }
+            }),
+            prisma.challenge.findFirst({
+                where: { userId, status: "active" },
+                orderBy: { createdAt: "desc" }
+            }),
+            prisma.habit.findMany({
+                where: { userId, autoCreateTodos: true }
             })
         ]);
+
+        const habits = habitsFromDb;
+
+        // 1.5 Lazy Sync: Create missing todos for today
+        const today = startOfDay(new Date());
+        const existingSyncTodos = await prisma.todo.findMany({
+            where: {
+                userId,
+                createdAt: { gte: today },
+                OR: [
+                    { habitId: { not: null } },
+                    { challengeId: { not: null } }
+                ]
+            }
+        });
+
+        const syncTasks = [];
+
+        // Check Challenge
+        if (activeChallenge?.autoCreateTodos) {
+            const hasTodo = existingSyncTodos.some(t => t.challengeId === activeChallenge.id);
+            if (!hasTodo) {
+                syncTasks.push(prisma.todo.create({
+                    data: {
+                        userId,
+                        task: `Daily Challenge: ${activeChallenge.title}`,
+                        category: activeChallenge.focus,
+                        challengeId: activeChallenge.id,
+                        createdAt: new Date()
+                    }
+                }));
+            }
+        }
+
+        // Check Habits (using autoHabits from Promise.all)
+        for (const habit of autoHabits) {
+            const hasTodo = (existingSyncTodos as any[]).some(t => t.habitId === habit.id);
+            if (!hasTodo) {
+                syncTasks.push(prisma.todo.create({
+                    data: {
+                        userId,
+                        task: `Habit: ${habit.name}`,
+                        category: habit.category || "Ritual",
+                        habitId: habit.id,
+                        createdAt: new Date()
+                    }
+                }));
+            }
+        }
+
+        if (syncTasks.length > 0) {
+            await Promise.all(syncTasks);
+            // Re-fetch todos if any were created to ensure dashboard is up to date
+            // or just rely on next refresh. For now, let's keep it simple.
+        }
 
         // 2. Calculate Top Stats
         // Habit Score: % of completion last 7 days
         let totalPossibleLogs = habits.length * 7;
-        let actualLogs = habits.reduce((acc, h) => acc + h.logs.length, 0);
+        let actualLogs = habits.reduce((acc: any, h: { logs: string | any[]; }) => acc + h.logs.length, 0);
         const habitScore = totalPossibleLogs > 0 ? Math.round((actualLogs / totalPossibleLogs) * 100) : 0;
 
         // Daily Streak: Simple calculation based on todos/habits completion
@@ -70,11 +133,11 @@ export async function GET() {
             const dayName = days[date.getDay()];
 
             // Coding Data
-            const waka = wakatime.find(w => startOfDay(new Date(w.date)).getTime() === date.getTime());
+            const waka = wakatime.find((w: any) => startOfDay(new Date(w.date)).getTime() === date.getTime());
             const codingHours = waka ? parseFloat(waka.totalTime.split('h')[0]) || 0 : 0;
 
             // Gym Data
-            const workoutDay = workouts.filter(w => w.completedAt && startOfDay(new Date(w.completedAt)).getTime() === date.getTime());
+            const workoutDay = workouts.filter((w: any) => w.completedAt && startOfDay(new Date(w.completedAt)).getTime() === date.getTime());
             const intensity = workoutDay.length > 0 ? 80 : 0;
 
             chartData.push({
@@ -100,7 +163,14 @@ export async function GET() {
                 { week: 'Week 2', connections: 12, posts: 4 },
                 { week: 'Week 3', connections: 8, posts: 3 },
                 { week: 'Week 4', connections: 20, posts: 7 },
-            ] // Dummy for now
+            ], // Dummy for now
+            activeChallenge: activeChallenge ? {
+                title: activeChallenge.title,
+                focus: activeChallenge.focus,
+                durationDays: activeChallenge.durationDays,
+                startDate: activeChallenge.startDate,
+                currentDay: Math.max(1, Math.ceil((new Date().getTime() - new Date(activeChallenge.startDate).getTime()) / (1000 * 60 * 60 * 24)))
+            } : null
         });
 
     } catch (error: any) {

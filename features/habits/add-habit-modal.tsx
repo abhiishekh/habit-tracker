@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Target, Tag } from "lucide-react";
+import { X, Target, Tag, Activity } from "lucide-react";
 import { UflLoaderInline } from "@/components/ui/ufl-loader";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import {
     Select,
@@ -13,16 +15,19 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 
+import { toast } from "sonner";
+
 export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; onClose: () => void; limits?: any }) {
     const router = useRouter();
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [category, setCategory] = useState("Growth");
     const [frequency, setFrequency] = useState("daily");
+    const [autoCreateTodos, setAutoCreateTodos] = useState(true);
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e: React.FormEvent | null, force = false) => {
+        if (e) e.preventDefault();
         if (!name) return;
 
         setLoading(true);
@@ -35,23 +40,34 @@ export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; on
                     description,
                     category,
                     frequency,
+                    autoCreateTodos,
+                    force
                 }),
             });
 
             if (res.ok) {
+                toast.success(force ? "Duplicate Ritual Created!" : "New Ritual Set!");
                 setName("");
                 setDescription("");
                 setCategory("Growth");
                 setFrequency("daily");
                 onClose();
                 router.refresh();
+            } else if (res.status === 409) {
+                const data = await res.json();
+                toast.warning(data.message, {
+                    action: {
+                        label: "Duplicate",
+                        onClick: () => handleSubmit(null, true),
+                    },
+                });
             } else {
                 const data = await res.json();
-                alert(data.error || "Something went wrong");
+                toast.error(data.error || "Something went wrong");
             }
         } catch (error) {
             console.error(error);
-            alert("Failed to create habit");
+            toast.error("Failed to create habit");
         } finally {
             setLoading(false);
         }
@@ -152,6 +168,18 @@ export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; on
                                             </SelectContent>
                                         </Select>
                                     </div>
+                                </div>
+
+                                <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 mb-6">
+                                    <div className="space-y-0.5">
+                                        <Label htmlFor="auto-todo-habit" className="text-sm font-bold text-slate-900 dark:text-white">Auto-generate Todo</Label>
+                                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-tight">Create a daily task for this ritual</p>
+                                    </div>
+                                    <Switch
+                                        id="auto-todo-habit"
+                                        checked={autoCreateTodos}
+                                        onCheckedChange={setAutoCreateTodos}
+                                    />
                                 </div>
 
                                 <button
