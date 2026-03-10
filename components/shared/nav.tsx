@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { LogIn, LogOut, User as UserIcon, Settings, Phone, LayoutDashboard, Shield } from 'lucide-react'
+import { LogIn, LogOut, User as UserIcon, Settings, Phone, LayoutDashboard, Shield, Sun, Moon } from 'lucide-react'
+import { ThemeToggle } from './theme-toggle'
 import { AuthModal } from '../auth/auth-modal'
 import {
     DropdownMenu,
@@ -125,6 +126,7 @@ const Nav = () => {
                                 <span>Login</span>
                             </button>
                         )}
+                        <ThemeToggle />
                     </div>
                 </div>
             </nav>

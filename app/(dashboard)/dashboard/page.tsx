@@ -14,11 +14,13 @@ import {
 } from "@/components/ui/popover"
 import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import TaskForm from '@/components/tasks/task-form'
+import ChallengeForm from '@/components/challenges/challenge-form'
 import { ActiveBlueprintsWidget } from '@/components/dashboard/ActiveBlueprintsWidget'
 
 const Dashboard = () => {
     const [data, setData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isChallengeOpen, setIsChallengeOpen] = useState(false);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -65,19 +67,23 @@ const Dashboard = () => {
                     <div className="flex items-center gap-2 mt-2">
                         <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
                         <p className="text-sm font-bold text-slate-500 dark:text-zinc-500 uppercase tracking-widest">
-                            UFL Session Active • <span className="text-indigo-500">Day {stats.streak.value} of 90</span>
+                            UFL Session Active • <span className="text-indigo-500">
+                                {data?.activeChallenge
+                                    ? `${data.activeChallenge.focus} Challenge: Day ${data.activeChallenge.currentDay} of ${data.activeChallenge.durationDays}`
+                                    : `No Active Challenge`}
+                            </span>
                         </p>
                     </div>
                 </div>
-                <Popover>
+                <Popover open={isChallengeOpen} onOpenChange={setIsChallengeOpen}>
                     <PopoverTrigger asChild>
                         <Button className="rounded-2xl h-12 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-xl shadow-indigo-500/20 active:scale-95 transition-all gap-2">
                             <Plus size={18} />
-                            Deploy New Task
+                            Start a Challenge
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-125 p-0 border-none shadow-2xl rounded-3xl" align="end">
-                        <TaskForm />
+                    <PopoverContent className="w-[450px] p-8 border-none shadow-2xl rounded-[2.5rem] bg-white dark:bg-zinc-950" align="end">
+                        <ChallengeForm onSuccess={() => setIsChallengeOpen(false)} />
                     </PopoverContent>
                 </Popover>
             </div>

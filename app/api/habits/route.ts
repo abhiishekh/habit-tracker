@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const { name, description, category, frequency } = await req.json();
+        const { name, description, category, frequency, autoCreateTodos, force } = await req.json();
 
         if (!name) {
             return NextResponse.json(
@@ -38,12 +38,27 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        // Conflict check: check for existing habit with same name
+        if (!force) {
+            const existingHabit = await prisma.habit.findFirst({
+                where: { userId: user.id, name: { equals: name, mode: 'insensitive' } }
+            });
+
+            if (existingHabit) {
+                return NextResponse.json(
+                    { error: "Conflict", message: `You already have a ritual named "${name}". Create duplicate?` },
+                    { status: 409 }
+                );
+            }
+        }
+
         const habit = await prisma.habit.create({
             data: {
                 name,
                 description,
                 category,
                 frequency,
+                autoCreateTodos: !!autoCreateTodos,
                 userId: user.id,
             },
         });
@@ -84,6 +99,9 @@ export async function GET() {
                         },
                     },
                 },
+                _count: {
+                    select: { logs: true }
+                }
             },
             orderBy: { createdAt: "desc" },
         });

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Sparkles, Activity } from "lucide-react";
+import { Plus, Sparkles, Activity, CheckCircle, RefreshCcw, Target, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { AddHabitModal } from "@/features/habits/add-habit-modal";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,58 @@ export default function HabitsPage() {
       const res = await fetch("/api/subscription/limits");
       if (res.ok) setLimits(await res.json());
     } catch (e) { console.error(e); }
+  };
+
+  const handleSync = async (habitId: string) => {
+    try {
+      const res = await fetch("/api/habits/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ habitId }),
+      });
+      if (res.ok) {
+        toast.success("Synced to Daily Todos!");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to sync");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Internal Server Error");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this ritual? All progress will be lost.")) return;
+
+    try {
+      const res = await fetch(`/api/habits/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast.success("Ritual removed");
+        fetchHabits();
+      } else {
+        toast.error("Failed to delete");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleLog = async (habitId: string) => {
+    try {
+      const res = await fetch(`/api/habits/${habitId}/logs`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        fetchHabits();
+        toast.success("Session logged!");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
@@ -72,18 +125,63 @@ export default function HabitsPage() {
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors uppercase tracking-tight">{habit.name}</h3>
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500/60">{habit.category}</span>
                 </div>
-                <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-slate-400 group-hover:text-indigo-500 transition-colors">
-                  <Activity size={20} />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleDelete(habit.id)}
+                    className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                  <div className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-slate-400 group-hover:text-indigo-500 transition-colors">
+                    <Activity size={20} />
+                  </div>
                 </div>
               </div>
-              <p className="text-slate-500 text-sm mb-6 line-clamp-2">{habit.description || "No description provided."}</p>
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{habit.frequency}</span>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Consistency</span>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle size={14} className="text-emerald-500" />
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">{habit._count?.logs || 0} Sessions</span>
+                  </div>
                 </div>
-                <button className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors">
-                  Log Session
+                {habit.autoCreateTodos && (
+                  <div className="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
+                    <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest flex items-center gap-1">
+                      <RefreshCcw size={10} className="animate-spin-slow" />
+                      Auto-Sync
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 pt-6 border-t border-slate-100 dark:border-zinc-800">
+                <button
+                  onClick={() => handleLog(habit.id)}
+                  disabled={habit.logs && habit.logs.length > 0}
+                  className={`flex-1 h-12 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${habit.logs && habit.logs.length > 0
+                    ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-500"
+                    : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-zinc-700"
+                    }`}
+                >
+                  {habit.logs && habit.logs.length > 0 ? (
+                    <>
+                      <CheckCircle size={14} />
+                      Completed
+                    </>
+                  ) : (
+                    <>
+                      <Activity size={14} />
+                      Log Session
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSync(habit.id)}
+                  className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 text-slate-400 hover:text-indigo-500 hover:border-indigo-500/50 transition-all flex items-center justify-center"
+                  title="Sync to Daily Todo"
+                >
+                  <Target size={18} />
                 </button>
               </div>
             </div>
