@@ -6,15 +6,16 @@ import { startOfDay } from "date-fns";
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const habitId = params.id;
+        const habitId = id;
         const userId = session.user.id;
         const today = startOfDay(new Date());
 

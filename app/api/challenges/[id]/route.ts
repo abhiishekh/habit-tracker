@@ -5,9 +5,10 @@ import { authOptions } from "@/lib/auth";
 
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const session = await getServerSession(authOptions);
 
         if (!session?.user?.id) {
@@ -15,7 +16,7 @@ export async function DELETE(
         }
 
         const userId = session.user.id;
-        const challengeId = params.id;
+        const challengeId = id;
 
         // Verify ownership
         const challenge = await prisma.challenge.findUnique({
