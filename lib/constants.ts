@@ -7,3 +7,9 @@ export const DEFAULT_SUBSCRIPTION_CONFIG = {
     free_blueprint_limit: "1",
     active_payment_gateway: "both" // "stripe" | "razorpay" | "both"
 };
+
+export enum SessionStatus {
+    RUNNING = "RUNNING",
+    PAUSED = "PAUSED",
+    COMPLETED = "COMPLETED"
+}

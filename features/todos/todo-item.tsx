@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, Clock, Check, Plus } from "lucide-react";
+import { Bell, Clock, Check, Plus, Play } from "lucide-react";
 import { UflLoaderInline } from "@/components/ui/ufl-loader";
+import Link from "next/link";
 
 interface TodoProps {
   id?: string;
@@ -138,6 +139,17 @@ export function TodoItem({ id, task, reminderTime, category, status, completed }
               <Plus size={12} /> 15m
             </button>
           </div>
+        )}
+
+        {/* Sessions Button */}
+        {!isCompleted && id && (
+          <Link
+            href={`/todos/${id}/sessions`}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 dark:bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-all active:scale-95 shadow-md shadow-indigo-500/20"
+          >
+            <Play size={14} fill="currentColor" />
+            Sessions
+          </Link>
         )}
 
         {/* The Live Timer Display */}
