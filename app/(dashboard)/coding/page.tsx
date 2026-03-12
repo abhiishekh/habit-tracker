@@ -302,7 +302,7 @@ export default function CodingPage() {
                                     <AreaChart data={projectChartData}>
                                         <XAxis hide />
                                         <YAxis />
-                                        <Tooltip formatter={(v: number | undefined) => v !== undefined ? `${v} min` : ''} />
+                                        <Tooltip formatter={(v) => v !== undefined ? `${v} min` : ''} />
 
                                         {stats?.projects?.map((p: any, i: number) => (
                                             <Area
@@ -333,7 +333,7 @@ export default function CodingPage() {
                                     <AreaChart data={languageChartData}>
                                         <XAxis hide />
                                         <YAxis />
-                                        <Tooltip formatter={(v: number | undefined) => v !== undefined ? `${v} min` : ''} />
+                                        <Tooltip formatter={(v) => v !== undefined ? `${v} min` : ''} />
 
                                         {stats?.languages?.map((p: any, i: number) => (
                                             <Area

@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        const { task, category, reminderTime } = await req.json();
+        const { task, category, reminderTime, plannedTime, sessionDuration, breakTime } = await req.json();
 
         if (!task || !reminderTime) {
             return NextResponse.json(
@@ -32,10 +32,46 @@ export async function POST(req: NextRequest) {
             data: {
                 task,
                 category,
+                plannedTime: plannedTime ? parseInt(plannedTime) : null,
                 reminderTime: new Date(reminderTime),
                 userId: user.id,
             },
         });
+
+        // Create initial sessions if planned
+        if (plannedTime && sessionDuration) {
+            const totalPlanned = parseInt(plannedTime);
+            const duration = parseInt(sessionDuration);
+            const breakDur = breakTime ? parseInt(breakTime) : 0;
+
+            const sessionCount = Math.ceil(totalPlanned / duration);
+
+            const sessionData = Array.from({ length: sessionCount }).map((_, i) => ({
+                todoId: todo.id,
+                userId: user.id,
+                targetDuration: i === sessionCount - 1 && totalPlanned % duration !== 0
+                    ? totalPlanned % duration
+                    : duration,
+                breakDuration: i === sessionCount - 1 ? 0 : breakDur,
+                order: i,
+                status: "PENDING" as const,
+            }));
+
+            await prisma.todoSession.createMany({
+                data: sessionData,
+            });
+        } else if (plannedTime) {
+            // Create a single session for the entire planned time if not divided
+            await prisma.todoSession.create({
+                data: {
+                    todoId: todo.id,
+                    userId: user.id,
+                    targetDuration: parseInt(plannedTime),
+                    order: 0,
+                    status: "PENDING",
+                }
+            });
+        }
 
         return NextResponse.json(todo);
     } catch (error) {

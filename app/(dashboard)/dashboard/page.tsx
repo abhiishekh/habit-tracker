@@ -16,6 +16,7 @@ import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import TaskForm from '@/components/tasks/task-form'
 import ChallengeForm from '@/components/challenges/challenge-form'
 import { ActiveBlueprintsWidget } from '@/components/dashboard/ActiveBlueprintsWidget'
+import { LifeArchitectOverview } from '@/components/dashboard/LifeArchitectOverview'
 
 const Dashboard = () => {
     const [data, setData] = useState<any>(null);
@@ -82,11 +83,22 @@ const Dashboard = () => {
                             Start a Challenge
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[450px] p-8 border-none shadow-2xl rounded-[2.5rem] bg-white dark:bg-zinc-950" align="end">
+                    <PopoverContent className="w-[min(450px,95vw)] p-8 border-none shadow-2xl rounded-[2.5rem] bg-white dark:bg-zinc-950 max-h-[90vh] overflow-y-auto custom-scrollbar" align="end">
                         <ChallengeForm onSuccess={() => setIsChallengeOpen(false)} />
                     </PopoverContent>
                 </Popover>
             </div>
+
+            {/* Life Architect Section (New Features) */}
+            {data?.lifeArchitect && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                >
+                    <LifeArchitectOverview data={data.lifeArchitect} />
+                </motion.div>
+            )}
 
             {/* Top Stats Row */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">

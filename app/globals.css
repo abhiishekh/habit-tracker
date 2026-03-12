@@ -139,3 +139,12 @@
 .PhoneInputCountrySelect {
   @apply bg-white dark:bg-slate-800;
 }
+/* Custom Scrollbar - Hide scrollbar while allowing scrolling */
+.custom-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}

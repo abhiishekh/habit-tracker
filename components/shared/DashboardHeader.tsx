@@ -2,16 +2,19 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, Shield, LayoutDashboard, Dumbbell, Flame, List, InfoIcon, Code2, Bot, CreditCard } from 'lucide-react'
+import { Menu, X, Shield, LayoutDashboard, Dumbbell, Flame, List, InfoIcon, Code2, Bot, CreditCard, Target } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
 
+import { getSubscriptionConfig } from '@/app/action'
+
 const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Workouts", href: "/workouts", icon: Dumbbell },
-    { name: "Habits", href: "/habits", icon: Flame },
-    { name: "Todos", href: "/todos", icon: List },
-    { name: "Insights", href: "/insights", icon: InfoIcon },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, key: "feature_dashboard" },
+    { name: "Workouts", href: "/workouts", icon: Dumbbell, key: "feature_workouts" },
+    { name: "Habits", href: "/habits", icon: Flame, key: "feature_habits" },
+    { name: "Challenges", href: "/challenges", icon: Target, key: "feature_challenges" },
+    { name: "Todos", href: "/todos", icon: List, key: "feature_todos" },
+    { name: "Insights", href: "/insights", icon: InfoIcon, key: "feature_insights" },
     { name: "Coding", href: "/coding", icon: Code2 },
     { name: "Blueprint", href: "/blueprint", icon: Bot },
     { name: "Billing", href: "/billing", icon: CreditCard },
@@ -20,6 +23,22 @@ const navItems = [
 export default function DashboardHeader({ isPro }: { isPro: boolean }) {
     const [isOpen, setIsOpen] = useState(false)
     const pathname = usePathname()
+    const [config, setConfig] = React.useState<any>(null)
+
+    // Fetch config for feature gating
+    useEffect(() => {
+        const fetchConfig = async () => {
+            const data = await getSubscriptionConfig()
+            setConfig(data)
+        }
+        fetchConfig()
+    }, [])
+
+    const filteredNavItems = navItems.filter(item => {
+        if (!item.key) return true
+        if (!config) return true
+        return config[item.key] === "true"
+    })
 
     // Close sidebar on route change
     useEffect(() => {
@@ -73,13 +92,14 @@ export default function DashboardHeader({ isPro }: { isPro: boolean }) {
 
                         <nav className="flex-1 px-4 space-y-1">
                             <div className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 px-2">Main Menu</div>
-                            {navItems.map((item) => {
+                            {filteredNavItems.map((item) => {
                                 const Icon = item.icon
                                 const active = pathname === item.href || pathname.startsWith(item.href + '/')
                                 return (
                                     <Link
                                         key={item.href}
                                         href={item.href}
+                                        onClick={() => setIsOpen(false)}
                                         className={clsx(
                                             "flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all",
                                             active

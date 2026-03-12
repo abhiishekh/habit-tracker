@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum SessionStatus {
+  PENDING
+  RUNNING
+  PAUSED
+  COMPLETED
+}
+
 model Waitlist {
   id    String @id @default(auto()) @map("_id") @db.ObjectId
   email String @unique
@@ -60,40 +67,80 @@ model User {
   todos           Todo[]
   wakaTimeStats   WakaTime[]
   workoutPlans    WorkoutPlan[]
+  chatMessages    ChatMessage[]
 
   height      Float?
   weight      Float?
   fitnessGoal String? // "Bulking", "Cutting", "Strength"
   experience  String? // "Beginner", "Intermediate"
 
-  incomePlans        IncomePlan[]
-  projectPlans       ProjectPlan[]
-  careerPlans        CareerPlan[]
-  userProfile        UserProfile?
-  feedbacks          UserFeedback[]
-  replanLogs         ReplanLog[]
-  businessPlans      BusinessPlan[]
-  healthPlans        HealthPlan[]
-  learningPlans      LearningPlan[]
-  mindsetPlans       MindsetPlan[]
-  productivityPlans  ProductivityPlan[]
-  relationshipPlans  RelationshipPlan[]
-  agentConversations AgentConversation[]
-  userGoals          UserGoal[]
-  agentMemories      AgentMemory[]
-  networkingPlans    NetworkingPlan[]
-  blueprintTasks     BlueprintTask[]
-  lifePlans          LifePlan[]
-  subscription       Subscription?
-  challenges         Challenge[]
+  incomePlans            IncomePlan[]
+  projectPlans           ProjectPlan[]
+  careerPlans            CareerPlan[]
+  userProfile            UserProfile?
+  feedbacks              UserFeedback[]
+  replanLogs             ReplanLog[]
+  businessPlans          BusinessPlan[]
+  healthPlans            HealthPlan[]
+  learningPlans          LearningPlan[]
+  mindsetPlans           MindsetPlan[]
+  productivityPlans      ProductivityPlan[]
+  relationshipPlans      RelationshipPlan[]
+  agentConversations     AgentConversation[]
+  userGoals              UserGoal[]
+  agentMemories          AgentMemory[]
+  networkingPlans        NetworkingPlan[]
+  blueprintTasks         BlueprintTask[]
+  lifePlans              LifePlan[]
+  subscription           Subscription?
+  challenges             Challenge[]
+  todoSessions           TodoSession[]
+  totalStreakDays        Int                 @default(0)
+  streakShields          Int                 @default(0)
+  streakShieldContinuity Int                 @default(0) // Days with 50-60%+ todo completion
+
+  roleLevel          Int       @default(0)
+  roleTitle          String    @default("Beginner")
+  lastProgressUpdate DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  progressTrees ProgressTree[]
+  userRoles     UserRole[]
+}
+
+model UserRole {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  role        String // "Developer", "Fitness", "Entrepreneur", etc.
+  targetHours Int // weekly goal
+  actualHours Float    @default(0)
+  weekStart   DateTime
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProgressTree {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String    @db.ObjectId
+  type        String // "habit", "challenge", "overall"
+  referenceId String?   @db.ObjectId // habitId or challengeId
+  trees       Json // array of tree growth stages
+  lastWatered DateTime?
+  growthLevel Int       @default(0)
+  status      String?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Habit {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
-  name        String
-  description String?
-  category    String?
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  name            String
+  description     String?
+  category        String?
   frequency       String   @default("daily") // daily, weekly
   autoCreateTodos Boolean  @default(false)
   createdAt       DateTime @default(now())
@@ -101,6 +148,10 @@ model Habit {
 
   user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs HabitLog[]
+
+  streakCount       Int       @default(0)
+  longestStreak     Int       @default(0)
+  lastCompletedDate DateTime?
 }
 
 model HabitLog {
@@ -129,20 +180,48 @@ model Task {
 }
 
 model Todo {
-  id               String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId           String    @db.ObjectId
+  id               String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String        @db.ObjectId
   task             String
   category         String?
+  plannedTime      Int? // planned duration in minutes
   reminderTime     DateTime?
   extraTime        Int?
-  whatsappNotified Boolean   @default(false)
-  completed        Boolean   @default(false)
+  whatsappNotified Boolean       @default(false)
+  completed        Boolean       @default(false)
   completedAt      DateTime?
-  habitId          String?   @db.ObjectId
-  challengeId      String?   @db.ObjectId
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  habitId          String?       @db.ObjectId
+  challengeId      String?       @db.ObjectId
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  sessions         TodoSession[]
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TodoSession {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  todoId String @db.ObjectId
+  userId String @db.ObjectId
+
+  startedAt DateTime?
+  endedAt   DateTime?
+
+  targetDuration Int // duration in minutes
+  breakDuration  Int @default(0) // break in minutes after this session
+  order          Int @default(0)
+
+  duration Int? // actual duration in minutes (computed when session ends)
+
+  status SessionStatus @default(PENDING)
+
+  pauseTime Int @default(0) // seconds paused
+  extraTime Int @default(0) // overtime used
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  todo Todo @relation(fields: [todoId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -409,15 +488,15 @@ model AgentMemory {
 
 // ─── LIFE ─────────────────────────────────────────────────────
 model LifePlan {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
-  goal        String
-  strategy    String?
-  startDate   DateTime @default(now())
-  endDate     DateTime
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  goal      String
+  strategy  String?
+  startDate DateTime @default(now())
+  endDate   DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   weeks LifeWeek[]
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -482,7 +561,7 @@ model BusinessTask {
   dayNumber   Int?
   title       String
   description String
-  type        String?   // "validation" | "marketing" | "product" | "operations"
+  type        String? // "validation" | "marketing" | "product" | "operations"
   isCompleted Boolean   @default(false)
   completedAt DateTime?
   deadline    DateTime?
@@ -522,7 +601,7 @@ model HealthTask {
   dayNumber   Int?
   title       String
   description String
-  category    String?   // "nutrition" | "sleep" | "exercise" | "stress" | "hydration"
+  category    String? // "nutrition" | "sleep" | "exercise" | "stress" | "hydration"
   isCompleted Boolean   @default(false)
   completedAt DateTime?
   deadline    DateTime?
@@ -563,7 +642,7 @@ model LearningTask {
   dayNumber   Int?
   title       String
   description String
-  resource    String?   // specific course, tutorial, or book reference
+  resource    String? // specific course, tutorial, or book reference
   isCompleted Boolean   @default(false)
   completedAt DateTime?
   deadline    DateTime?
@@ -603,7 +682,7 @@ model MindsetTask {
   dayNumber   Int?
   title       String
   description String
-  type        String?   // "habit" | "exercise" | "journaling" | "affirmation"
+  type        String? // "habit" | "exercise" | "journaling" | "affirmation"
   isCompleted Boolean   @default(false)
   completedAt DateTime?
   deadline    DateTime?
@@ -643,7 +722,7 @@ model ProductivityTask {
   dayNumber   Int?
   title       String
   description String
-  type        String?   // "routine" | "focus" | "review" | "system"
+  type        String? // "routine" | "focus" | "review" | "system"
   isCompleted Boolean   @default(false)
   completedAt DateTime?
   deadline    DateTime?
@@ -683,7 +762,7 @@ model RelationshipTask {
   dayNumber   Int?
   title       String
   description String
-  type        String?   // "communication" | "activity" | "habit" | "conflict"
+  type        String? // "communication" | "activity" | "habit" | "conflict"
   isCompleted Boolean   @default(false)
   completedAt DateTime?
   deadline    DateTime?
@@ -723,7 +802,7 @@ model NetworkingTask {
   dayNumber   Int?
   title       String
   description String
-  platform    String?   // "LinkedIn" | "Twitter" | "Email" | "Events"
+  platform    String? // "LinkedIn" | "Twitter" | "Email" | "Events"
   isCompleted Boolean   @default(false)
   completedAt DateTime?
   deadline    DateTime?
@@ -759,12 +838,12 @@ model BlueprintTask {
 model Subscription {
   id                     String    @id @default(auto()) @map("_id") @db.ObjectId
   userId                 String    @unique @db.ObjectId
-  status                 String    // "active", "canceled", "past_due", "trialing", etc.
-  planId                 String    // Internal plan ID e.g., "free", "pro_monthly", "pro_yearly"
-  stripeCustomerId       String?   
-  stripeSubscriptionId   String?   
-  razorpayCustomerId     String?   
-  razorpaySubscriptionId String?   
+  status                 String // "active", "canceled", "past_due", "trialing", etc.
+  planId                 String // Internal plan ID e.g., "free", "pro_monthly", "pro_yearly"
+  stripeCustomerId       String?
+  stripeSubscriptionId   String?
+  razorpayCustomerId     String?
+  razorpaySubscriptionId String?
   currentPeriodStart     DateTime?
   currentPeriodEnd       DateTime?
   cancelAtPeriodEnd      Boolean   @default(false)
@@ -775,18 +854,32 @@ model Subscription {
 }
 
 model Challenge {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String   @db.ObjectId
-  title        String
-  focus        String
-  description  String?
-  durationDays Int      @default(90)
-  autoCreateTodos Boolean @default(false)
-  startDate    DateTime @default(now())
-  endDate      DateTime
-  status       String   @default("active") // active, completed, failed
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  title           String
+  focus           String
+  description     String?
+  durationDays    Int      @default(90)
+  autoCreateTodos Boolean  @default(false)
+  startDate       DateTime @default(now())
+  endDate         DateTime
+  status          String   @default("active") // active, completed, failed
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  streakCount    Int   @default(0)
+  longestStreak  Int   @default(0)
+  completionRate Float @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  role      String // "user" (you) or "assistant" (AI)
+  content   String
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

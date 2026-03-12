@@ -30,6 +30,10 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
   const [hours, setHours] = useState("09");
   const [minutes, setMinutes] = useState("00");
   const [loading, setLoading] = useState(false);
+  const [plannedTime, setPlannedTime] = useState("");
+  const [sessionDuration, setSessionDuration] = useState("");
+  const [breakTime, setBreakTime] = useState("");
+  const [divideIntoSessions, setDivideIntoSessions] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +54,9 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
           task: title,
           category,
           reminderTime: reminderDate.toISOString(),
+          plannedTime: plannedTime || null,
+          sessionDuration: divideIntoSessions ? sessionDuration : null,
+          breakTime: divideIntoSessions ? breakTime : null,
         }),
       });
 
@@ -90,7 +97,7 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white p-8 shadow-2xl dark:bg-zinc-950 border-l border-slate-200 dark:border-zinc-800"
+            className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white p-8 shadow-2xl dark:bg-zinc-950 border-l border-slate-200 dark:border-zinc-800 overflow-y-auto scroll-smooth custom-scrollbar"
           >
             <div className="flex justify-between items-center mb-10">
               <div>
@@ -172,23 +179,79 @@ export function AddTodoModal({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                     </div>
                   </div>
 
+                  <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Category</label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="h-12 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-indigo-500/5">
+                      <div className="flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-indigo-500" />
+                        <SelectValue placeholder="Select Category" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 font-medium">
+                      <SelectItem value="Code">Code</SelectItem>
+                      <SelectItem value="Fitness">Fitness</SelectItem>
+                      <SelectItem value="Freelance">Freelance</SelectItem>
+                      <SelectItem value="Growth">Growth</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-zinc-800">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Category</label>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="h-12 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-indigo-500/5">
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-4 w-4 text-indigo-500" />
-                          <SelectValue placeholder="Select Category" />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 font-medium">
-                        <SelectItem value="Code">Code</SelectItem>
-                        <SelectItem value="Fitness">Fitness</SelectItem>
-                        <SelectItem value="Freelance">Freelance</SelectItem>
-                        <SelectItem value="Growth">Growth</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Planned Time (minutes)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 60"
+                      value={plannedTime}
+                      onChange={(e) => setPlannedTime(e.target.value)}
+                      className="w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-3 font-medium outline-none focus:border-indigo-500 transition-all"
+                    />
                   </div>
+
+                  <div className="flex items-center gap-3 py-2">
+                    <input
+                      type="checkbox"
+                      id="divideSessions"
+                      checked={divideIntoSessions}
+                      onChange={(e) => setDivideIntoSessions(e.target.checked)}
+                      className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <label htmlFor="divideSessions" className="text-sm font-medium text-slate-700 dark:text-slate-300">Divide into sessions</label>
+                  </div>
+
+                  <AnimatePresence>
+                    {divideIntoSessions && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="space-y-4 overflow-hidden"
+                      >
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Session (min)</label>
+                            <input
+                              type="number"
+                              placeholder="25"
+                              value={sessionDuration}
+                              onChange={(e) => setSessionDuration(e.target.value)}
+                              className="w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-3 font-medium outline-none focus:border-indigo-500 transition-all"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold uppercase tracking-widest text-slate-400 block">Break (min)</label>
+                            <input
+                              type="number"
+                              placeholder="5"
+                              value={breakTime}
+                              onChange={(e) => setBreakTime(e.target.value)}
+                              className="w-full bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-3 font-medium outline-none focus:border-indigo-500 transition-all"
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 

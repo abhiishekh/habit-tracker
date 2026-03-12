@@ -207,7 +207,7 @@ export function AIAgentShowcase() {
             </div> */}
             <Carousel
                 opts={{
-                    align: "start",
+                    align: "center",
                 }}
                 plugins={[
                     Autoplay({
