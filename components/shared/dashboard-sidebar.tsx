@@ -5,14 +5,15 @@ import { usePathname } from 'next/navigation'
 import React from 'react'
 import clsx from 'clsx'
 import Link from 'next/link';
+import { getSubscriptionConfig } from '@/app/action';
 
 const navItems = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Workouts", href: "/workouts", icon: Dumbbell },
-    { name: "Habits", href: "/habits", icon: Flame },
-    { name: "Challenges", href: "/challenges", icon: Target },
-    { name: "Todos", href: "/todos", icon: List },
-    { name: "Insights", href: "/insights", icon: InfoIcon },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, key: "feature_dashboard" },
+    { name: "Workouts", href: "/workouts", icon: Dumbbell, key: "feature_workouts" },
+    { name: "Habits", href: "/habits", icon: Flame, key: "feature_habits" },
+    { name: "Challenges", href: "/challenges", icon: Target, key: "feature_challenges" },
+    { name: "Todos", href: "/todos", icon: List, key: "feature_todos" },
+    { name: "Insights", href: "/insights", icon: InfoIcon, key: "feature_insights" },
     { name: "Coding", href: "/coding", icon: Code2 },
     { name: "Blueprint", href: "/blueprint", icon: Bot },
     { name: "Billing", href: "/billing", icon: CreditCard },
@@ -20,13 +21,28 @@ const navItems = [
 
 const DashboardSidebar = () => {
     const pathname = usePathname()
+    const [config, setConfig] = React.useState<any>(null)
+
+    React.useEffect(() => {
+        const fetchConfig = async () => {
+            const data = await getSubscriptionConfig()
+            setConfig(data)
+        }
+        fetchConfig()
+    }, [])
+
+    const filteredNavItems = navItems.filter(item => {
+        if (!item.key) return true
+        if (!config) return true // Show all while loading
+        return config[item.key] === "true"
+    })
 
     return (
         <>
             {/* ── DESKTOP SIDEBAR (lg+) ─────────────────────────────────────── */}
             <aside className="hidden lg:flex fixed left-0 h-[calc(100vh-64px)] w-64 border-r border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 flex-col overflow-y-auto overflow-x-hidden custom-scrollbar px-4 py-6">
                 <nav className="space-y-1 flex-1 mt-4">
-                    {navItems.map((item) => {
+                    {filteredNavItems.map((item) => {
                         const Icon = item.icon;
                         const active = pathname === item.href || pathname.startsWith(item.href + '/');
                         return (

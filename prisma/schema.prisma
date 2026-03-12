@@ -74,27 +74,65 @@ model User {
   fitnessGoal String? // "Bulking", "Cutting", "Strength"
   experience  String? // "Beginner", "Intermediate"
 
-  incomePlans        IncomePlan[]
-  projectPlans       ProjectPlan[]
-  careerPlans        CareerPlan[]
-  userProfile        UserProfile?
-  feedbacks          UserFeedback[]
-  replanLogs         ReplanLog[]
-  businessPlans      BusinessPlan[]
-  healthPlans        HealthPlan[]
-  learningPlans      LearningPlan[]
-  mindsetPlans       MindsetPlan[]
-  productivityPlans  ProductivityPlan[]
-  relationshipPlans  RelationshipPlan[]
-  agentConversations AgentConversation[]
-  userGoals          UserGoal[]
-  agentMemories      AgentMemory[]
-  networkingPlans    NetworkingPlan[]
-  blueprintTasks     BlueprintTask[]
-  lifePlans          LifePlan[]
-  subscription       Subscription?
-  challenges         Challenge[]
-  todoSessions       TodoSession[]
+  incomePlans            IncomePlan[]
+  projectPlans           ProjectPlan[]
+  careerPlans            CareerPlan[]
+  userProfile            UserProfile?
+  feedbacks              UserFeedback[]
+  replanLogs             ReplanLog[]
+  businessPlans          BusinessPlan[]
+  healthPlans            HealthPlan[]
+  learningPlans          LearningPlan[]
+  mindsetPlans           MindsetPlan[]
+  productivityPlans      ProductivityPlan[]
+  relationshipPlans      RelationshipPlan[]
+  agentConversations     AgentConversation[]
+  userGoals              UserGoal[]
+  agentMemories          AgentMemory[]
+  networkingPlans        NetworkingPlan[]
+  blueprintTasks         BlueprintTask[]
+  lifePlans              LifePlan[]
+  subscription           Subscription?
+  challenges             Challenge[]
+  todoSessions           TodoSession[]
+  totalStreakDays        Int                 @default(0)
+  streakShields          Int                 @default(0)
+  streakShieldContinuity Int                 @default(0) // Days with 50-60%+ todo completion
+
+  roleLevel          Int       @default(0)
+  roleTitle          String    @default("Beginner")
+  lastProgressUpdate DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  progressTrees ProgressTree[]
+  userRoles     UserRole[]
+}
+
+model UserRole {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  role        String // "Developer", "Fitness", "Entrepreneur", etc.
+  targetHours Int // weekly goal
+  actualHours Float    @default(0)
+  weekStart   DateTime
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProgressTree {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String    @db.ObjectId
+  type        String // "habit", "challenge", "overall"
+  referenceId String?   @db.ObjectId // habitId or challengeId
+  trees       Json // array of tree growth stages
+  lastWatered DateTime?
+  growthLevel Int       @default(0)
+  status      String?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Habit {
@@ -110,6 +148,10 @@ model Habit {
 
   user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   logs HabitLog[]
+
+  streakCount       Int       @default(0)
+  longestStreak     Int       @default(0)
+  lastCompletedDate DateTime?
 }
 
 model HabitLog {
@@ -825,13 +867,17 @@ model Challenge {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  streakCount    Int   @default(0)
+  longestStreak  Int   @default(0)
+  completionRate Float @default(0)
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ChatMessage {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String   @db.ObjectId
-  role      String   // "user" (you) or "assistant" (AI)
+  role      String // "user" (you) or "assistant" (AI)
   content   String
   createdAt DateTime @default(now())
 

@@ -1,11 +1,11 @@
 "use client"
 import { AddTodoModal } from "@/features/todos/add-todo-modal";
 import { TodoItem } from "@/features/todos/todo-item";
-import { Plus, ClipboardList, Smartphone, Send, Sparkles } from "lucide-react";
+import { Plus, ClipboardList, Smartphone, Send, Sparkles, Loader2, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { AiGoalAssistant } from "@/features/ai-goals/ai-goal-assistant";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toggleWhatsapp, sendTestWhatsapp } from "@/app/action";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -20,6 +20,13 @@ export default function TodosPage() {
     const [isWhatsappEnabled, setIsWhatsappEnabled] = useState(false);
     const [toggleLoading, setToggleLoading] = useState(false);
     const [testLoading, setTestLoading] = useState(false);
+
+    // Pagination states
+    const [visibleCounts, setVisibleCounts] = useState({
+        today: 10,
+        timeUp: 10,
+        completed: 10
+    });
 
     useEffect(() => {
         if (session?.user) {
@@ -72,57 +79,42 @@ export default function TodosPage() {
         fetchTasks();
     }, []);
 
-    return (
-        <div className="">
-            <div className="flex justify-between items-end mb-10">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Daily Focus</h1>
-                    <p className="text-slate-500">Don't let the clock beat you.</p>
-                </div>
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={handleSendTest}
-                        disabled={testLoading}
-                        title="Send test WhatsApp message"
-                        className="h-12 px-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-slate-400 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50"
-                    >
-                        {testLoading ? <UflLoaderInline style="flip" compact={true} /> : <Send size={20} className="mr-2" />}
-                        <span className="hidden sm:inline font-medium text-sm">Test WA</span>
-                    </button>
-                    <button
-                        onClick={() => window.location.href = '/blueprint'}
-                        title="Open Gym Trainer AI"
-                        className="h-12 px-4 rounded-2xl bg-indigo-600 dark:bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/30 active:scale-95 group"
-                    >
-                        <Sparkles size={18} className="sm:mr-2 group-hover:rotate-12 transition-transform" />
-                        <span className="hidden sm:inline font-bold text-sm">Gym Trainer</span>
-                    </button>
+    // Categorization logic
+    const categorizedTasks = useMemo(() => {
+        const now = new Date();
+        return {
+            today: tasks.filter(t => !t.completed && new Date(t.reminderTime) > now),
+            timeUp: tasks.filter(t => !t.completed && new Date(t.reminderTime) <= now),
+            completed: tasks.filter(t => t.completed)
+        };
+    }, [tasks]);
 
-                    <button
-                        onClick={handleToggleWhatsapp}
-                        disabled={toggleLoading}
-                        title={isWhatsappEnabled ? "Disable WhatsApp" : "Enable WhatsApp"}
-                        className={`h-12 w-12 rounded-2xl border flex items-center justify-center transition-all active:scale-95 shadow-sm ${isWhatsappEnabled
-                            ? "bg-green-500/10 border-green-500/50 text-green-600"
-                            : "bg-slate-100 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-400"
-                            }`}
-                    >
-                        {toggleLoading ? <UflLoaderInline style="flip" compact={true} /> : <Smartphone size={24} />}
-                    </button>
-                    <button onClick={() => setIsModalOpen(true)} className="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
-                        <Plus size={24} />
-                    </button>
-                </div>
-            </div>
+    const handleLoadMore = (category: 'today' | 'timeUp' | 'completed') => {
+        setVisibleCounts(prev => ({
+            ...prev,
+            [category]: prev[category] + 10
+        }));
+    };
 
-            {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 gap-4">
-                    <UflLoaderInline style="flip" />
-                    <p className="text-slate-500 font-medium tracking-wide">Loading your focus...</p>
+    const renderTodoSection = (title: string, icon: any, taskList: any[], category: 'today' | 'timeUp' | 'completed') => {
+        const visibleTasks = taskList.slice(0, visibleCounts[category]);
+        const hasMore = taskList.length > visibleCounts[category];
+
+        if (taskList.length === 0) return null;
+
+        return (
+            <div className="mb-12">
+                <div className="flex items-center gap-3 mb-6 px-1">
+                    <div className={`p-2 rounded-xl bg-slate-100 dark:bg-zinc-800 ${category === 'timeUp' ? 'text-red-500' : category === 'completed' ? 'text-emerald-500' : 'text-indigo-500'}`}>
+                        {icon}
+                    </div>
+                    <h2 className="text-xl font-black tracking-tight text-slate-800 dark:text-zinc-200">
+                        {title}
+                        <span className="ml-3 text-sm font-bold text-slate-400">{taskList.length}</span>
+                    </h2>
                 </div>
-            ) : tasks.length > 0 ? (
                 <div className="space-y-4">
-                    {tasks.map((task) => (
+                    {visibleTasks.map((task) => (
                         <TodoItem
                             key={task.id}
                             id={task.id}
@@ -134,20 +126,80 @@ export default function TodosPage() {
                         />
                     ))}
                 </div>
+                {hasMore && (
+                    <button
+                        onClick={() => handleLoadMore(category)}
+                        className="mt-6 w-full py-4 rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-zinc-800 text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-all active:scale-[0.99]"
+                    >
+                        Load More {title}
+                    </button>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">Daily Focus</h1>
+                    <p className="text-slate-500 font-medium">Synchronize your reality with your intentions.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleSendTest}
+                        disabled={testLoading}
+                        className="h-12 px-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-slate-400 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50 font-bold text-sm shadow-sm"
+                    >
+                        {testLoading ? <Loader2 size={18} className="animate-spin text-indigo-500" /> : <Send size={18} className="mr-2" />}
+                        <span className="hidden sm:inline">Test WA</span>
+                    </button>
+
+                    <button
+                        onClick={handleToggleWhatsapp}
+                        disabled={toggleLoading}
+                        className={`h-12 w-12 rounded-2xl border flex items-center justify-center transition-all active:scale-95 shadow-sm ${isWhatsappEnabled
+                            ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-600"
+                            : "bg-slate-100 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-400"
+                            }`}
+                    >
+                        {toggleLoading ? <Loader2 size={24} className="animate-spin" /> : <Smartphone size={24} />}
+                    </button>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="h-12 px-6 rounded-2xl bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-95 font-bold gap-2"
+                    >
+                        <Plus size={20} />
+                        <span>Add Task</span>
+                    </button>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-24 gap-6">
+                    <UflLoaderInline style="flip" />
+                    <p className="text-slate-500 font-bold tracking-widest uppercase text-xs animate-pulse">Syncing consciousness...</p>
+                </div>
+            ) : tasks.length > 0 ? (
+                <div className="pb-20">
+                    {renderTodoSection("Time Up", <AlertCircle size={20} />, categorizedTasks.timeUp, 'timeUp')}
+                    {renderTodoSection("Today's Missions", <Clock size={20} />, categorizedTasks.today, 'today')}
+                    {renderTodoSection("Completed", <CheckCircle2 size={20} />, categorizedTasks.completed, 'completed')}
+                </div>
             ) : (
-                <div className="flex flex-col items-center justify-center py-20 px-4 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50">
-                    <div className="h-20 w-20 rounded-3xl bg-white dark:bg-zinc-800 flex items-center justify-center mb-8 shadow-sm">
-                        <ClipboardList className="text-indigo-500" size={40} />
+                <div className="flex flex-col items-center justify-center py-24 px-8 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-zinc-800 bg-slate-50/30 dark:bg-zinc-900/30">
+                    <div className="h-24 w-24 rounded-[2.5rem] bg-white dark:bg-zinc-800 flex items-center justify-center mb-8 shadow-indigo-100 dark:shadow-none shadow-xl">
+                        <ClipboardList className="text-indigo-500" size={48} />
                     </div>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">No tasks found</h3>
-                    <p className="text-slate-500 text-center max-w-sm mb-10 text-lg">
-                        Stay ahead of the game. Create your first task for your 90-day challenge.
+                    <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">Empty Workspace</h3>
+                    <p className="text-slate-500 text-center max-w-sm mb-12 text-lg font-medium leading-relaxed">
+                        The future is unwritten. Define your next victory and start the countdown.
                     </p>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="px-8 py-4 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/25 active:scale-[0.98]"
+                        className="px-10 py-5 rounded-[2rem] bg-indigo-600 text-white font-black hover:bg-indigo-700 transition-all shadow-2xl shadow-indigo-500/40 active:scale-[0.97]"
                     >
-                        Create Your First Task
+                        Create First Task
                     </button>
                 </div>
             )}
@@ -156,7 +208,7 @@ export default function TodosPage() {
                 isOpen={isModalOpen}
                 onClose={() => {
                     setIsModalOpen(false);
-                    fetchTasks(); // Refresh list after closing
+                    fetchTasks();
                 }}
             />
 
@@ -164,7 +216,7 @@ export default function TodosPage() {
                 isOpen={isAiModalOpen}
                 onClose={() => {
                     setIsAiModalOpen(false);
-                    fetchTasks(); // Refresh list after closing
+                    fetchTasks();
                 }}
             />
         </div>

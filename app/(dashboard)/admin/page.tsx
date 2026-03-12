@@ -324,7 +324,34 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 </div>
-                <div className="mt-6 flex justify-end">
+
+                <div className="mt-10 pt-8 border-t border-slate-100 dark:border-zinc-800">
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <Shield className="h-5 w-5 text-indigo-500" />
+                        Feature Gating (Global Access Control)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[
+                            { id: 'feature_dashboard', label: 'Dashboard Tab' },
+                            { id: 'feature_insights', label: 'Insights Tab' },
+                            { id: 'feature_habits', label: 'Habits Tab' },
+                            { id: 'feature_todos', label: 'Todos Tab' },
+                            { id: 'feature_challenges', label: 'Challenges Tab' },
+                            { id: 'feature_workouts', label: 'Workouts Tab' },
+                        ].map((feature) => (
+                            <div key={feature.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-zinc-900/50 border border-slate-100 dark:border-zinc-800">
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{feature.label}</span>
+                                <Switch
+                                    checked={subConfig[feature.id] === 'true'}
+                                    onCheckedChange={(checked) => setSubConfig({ ...subConfig, [feature.id]: String(checked) })}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                    <p className="mt-4 text-xs text-slate-500 italic">Disabling a feature will hide it from the sidebar and navigation for ALL users.</p>
+                </div>
+
+                <div className="mt-8 flex justify-end">
                     <Button onClick={handleConfigSave} disabled={isSavingConfig}>
                         {isSavingConfig ? "Saving..." : "Save Configuration"}
                     </Button>

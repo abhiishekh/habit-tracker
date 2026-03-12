@@ -90,7 +90,7 @@ export function AddHabitModal({ isOpen, onClose, limits }: { isOpen: boolean; on
                         animate={{ x: 0 }}
                         exit={{ x: "100%" }}
                         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                        className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white p-8 shadow-2xl dark:bg-zinc-950 border-l border-slate-200 dark:border-zinc-800"
+                        className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white p-8 shadow-2xl dark:bg-zinc-950 border-l border-slate-200 dark:border-zinc-800 overflow-y-auto scroll-smooth custom-scrollbar"
                     >
                         <div className="flex justify-between items-center mb-10">
                             <div>

@@ -90,7 +90,7 @@ export function CareerBlueprintForm() {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl mx-auto p-1 bg-gradient-to-br from-amber-600/20 via-border to-amber-600/10 rounded-3xl"
+            className="max-w-3xl mx-auto p-1 bg-linear-to-br from-amber-600/20 via-border to-amber-600/10 rounded-3xl"
         >
             <div className="bg-card p-8 md:p-10 rounded-[1.4rem] shadow-2xl space-y-10">
                 <div className="flex flex-col md:flex-row md:items-center gap-6">
@@ -103,7 +103,7 @@ export function CareerBlueprintForm() {
                     </div>
                 </div>
 
-                <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+                <div className="h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { model } from "@/lib/gemini"; // Your Gemini 3 Flash config
+import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 
 export async function POST(req: Request) {
     const { phone, text, pushname } = await req.json();
@@ -22,9 +23,13 @@ export async function POST(req: Request) {
   Be disciplined, concise (max 2 sentences), and reference their history if relevant.`;
 
     const aiResponse = await model.invoke([
-        ["system", systemPrompt],
-        ...history.reverse().map((m: { role: string; content: any; }) => [m.role === "user" ? "human" : "ai", m.content]),
-        ["human", text]
+        new SystemMessage(systemPrompt),
+        ...history.reverse().map((m: { role: string; content: string }) =>
+            m.role === "user"
+                ? new HumanMessage(m.content)
+                : new AIMessage(m.content)
+        ),
+        new HumanMessage(text)
     ]);
 
     const replyText = aiResponse.content.toString();
