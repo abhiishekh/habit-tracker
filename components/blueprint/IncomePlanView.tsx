@@ -109,7 +109,7 @@ export function IncomePlanView({ planId }: { planId: string }) {
 
             {/* Strategy Hub */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="md:col-span-2 bg-gradient-to-br from-emerald-500/10 to-transparent border-emerald-500/20">
+                <Card className="md:col-span-2 bg-linear-to-br from-emerald-500/10 to-transparent border-emerald-500/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                             <TrendingUp className="w-5 h-5" />
@@ -177,7 +177,7 @@ export function IncomePlanView({ planId }: { planId: string }) {
                                         </div>
                                         <div>
                                             <h4 className="font-semibold text-lg">{week.focus}</h4>
-                                            <p className="text-sm text-muted-foreground font-medium text-emerald-600/70 dark:text-emerald-400/70">
+                                            <p className="text-sm text-muted-foreground font-medium dark:text-emerald-400/70">
                                                 Target: ₹{week.targetEarnings.toLocaleString()}
                                             </p>
                                         </div>

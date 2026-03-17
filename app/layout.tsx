@@ -31,6 +31,7 @@ export const metadata: Metadata = {
 
 import { Providers } from "@/components/providers/Providers";
 import { fetchUserSubscriptionTier } from "./action";
+import ServiceWorkerRegister from "@/lib/utils/serviceWorker";
 
 export default async function RootLayout({
   children,
@@ -53,6 +54,7 @@ export default async function RootLayout({
           <Providers>
             <div className="flex flex-col min-h-screen bg-white dark:bg-[#09090B] transition-colors duration-300">
               <Nav />
+              <ServiceWorkerRegister/>
               <main className="flex-1 w-full mt-16">
                 {children}
                 <Toaster richColors position="bottom-right" />

@@ -52,3 +52,48 @@ export async function GET(
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const {id} = await params;
+        const session = await getServerSession(authOptions);
+
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const planId = id;
+
+        const plan = await prisma.workoutPlan.findUnique({
+            where: { id: planId }
+        });
+
+        if (!plan) {
+            return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+        }
+
+        if (plan.userId !== session.user.id) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        await prisma.workoutPlan.delete({
+            where: { id: planId }
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: "Workout plan deleted successfully"
+        });
+
+    } catch (error: any) {
+        console.error("DELETE ERROR:", error);
+        return NextResponse.json(
+            { error: error.message || "Something went wrong" },
+            { status: 500 }
+        );
+    }
+}
