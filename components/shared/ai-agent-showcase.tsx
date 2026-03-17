@@ -221,7 +221,7 @@ export function AIAgentShowcase() {
                     {agents.map((agent, i) => (
                         <CarouselItem
                             key={agent.title}
-                            className="pl-4 md:basis-1/2 lg:basis-1/4"
+                            className="pl-4 basis-full md:basis-1/2 lg:basis-1/4 flex justify-center"
                         >
                             <AgentCard agent={agent} />
                         </CarouselItem>

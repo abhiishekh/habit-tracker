@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Target, ChevronRight, Dumbbell, Sparkles } from "lucide-react"
+import { Calendar, Target, ChevronRight, Dumbbell, Sparkles, Trash } from "lucide-react"
 import { UflLoaderInline } from "@/components/ui/ufl-loader"
 import Link from "next/link"
 
@@ -13,23 +13,44 @@ export default function WorkoutHub() {
     const [plans, setPlans] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
-    useEffect(() => {
-        const fetchPlans = async () => {
-            try {
-                const response = await fetch('/api/workout-plans')
-                const data = await response.json()
-                if (data.success) {
-                    setPlans(data.plans)
-                }
-            } catch (error) {
-                console.error("Failed to fetch plans:", error)
-            } finally {
-                setIsLoading(false)
+
+    const fetchPlans = async () => {
+        try {
+            const response = await fetch('/api/workout-plans')
+            const data = await response.json()
+            if (data.success) {
+                setPlans(data.plans)
             }
+        } catch (error) {
+            console.error("Failed to fetch plans:", error)
+        } finally {
+            setIsLoading(false)
         }
+    }
+    useEffect(() => {
+
         fetchPlans()
     }, [])
 
+    const handleDelete = async (id: string) => {
+
+        setPlans(prev => prev.filter(plan => plan.id !== id));
+
+        try {
+            const res = await fetch(`/api/workout-plans/${id}`, {
+                method: "DELETE",
+            });
+
+            if (!res.ok) {
+                throw new Error("Delete failed");
+            }
+
+        } catch (error) {
+            console.error(error);
+
+            fetchPlans()
+        }
+    };
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
@@ -92,8 +113,16 @@ export default function WorkoutHub() {
                                         <Badge variant={plan.isActive ? "default" : "secondary"}>
                                             {plan.isActive ? "Active" : "Archived"}
                                         </Badge>
-                                        <div className="p-2 bg-primary/10 rounded-lg group-hover:scale-110 transition-transform">
-                                            <Calendar className="w-5 h-5 text-primary" />
+                                        <div className="flex gap-2" >
+                                            <div className="p-2 bg-primary/10 rounded-lg group-hover:scale-110 transition-transform" >
+
+                                                <Trash onClick={() => handleDelete(plan.id)} className="w-5 h-5 text-destructive" />
+
+                                            </div>
+                                            <div className="p-2 bg-primary/10 rounded-lg group-hover:scale-110 transition-transform">
+
+                                                <Calendar className="w-5 h-5 text-primary" />
+                                            </div>
                                         </div>
                                     </div>
                                     <CardTitle className="text-xl line-clamp-1">{plan.goal}</CardTitle>

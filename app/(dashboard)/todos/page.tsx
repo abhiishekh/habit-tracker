@@ -35,6 +35,15 @@ export default function TodosPage() {
         }
     }, [session]);
 
+
+    const handleToggleComplete = (id: string, completed: boolean) => {
+        setTasks(prev =>
+            prev.map(task =>
+                task.id === id ? { ...task, completed } : task
+            )
+        );
+    };
+
     const handleToggleWhatsapp = async () => {
         setToggleLoading(true);
         try {
@@ -123,13 +132,14 @@ export default function TodosPage() {
                             category={task.category || "General"}
                             status={task.status}
                             completed={task.completed}
+                            onToggleComplete={handleToggleComplete}
                         />
                     ))}
                 </div>
                 {hasMore && (
                     <button
                         onClick={() => handleLoadMore(category)}
-                        className="mt-6 w-full py-4 rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-zinc-800 text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-all active:scale-[0.99]"
+                        className="mt-6 w-full py-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-zinc-800 text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-zinc-900/50 transition-all active:scale-[0.99]"
                     >
                         Load More {title}
                     </button>
@@ -146,14 +156,14 @@ export default function TodosPage() {
                     <p className="text-slate-500 font-medium">Synchronize your reality with your intentions.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
+                    {/* <button
                         onClick={handleSendTest}
                         disabled={testLoading}
                         className="h-12 px-5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-slate-400 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all active:scale-95 disabled:opacity-50 font-bold text-sm shadow-sm"
                     >
                         {testLoading ? <Loader2 size={18} className="animate-spin text-indigo-500" /> : <Send size={18} className="mr-2" />}
                         <span className="hidden sm:inline">Test WA</span>
-                    </button>
+                    </button> */}
 
                     <button
                         onClick={handleToggleWhatsapp}

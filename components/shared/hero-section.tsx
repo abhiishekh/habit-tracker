@@ -35,7 +35,7 @@ const HeroSection = () => {
                 </div>
             </div>
 
-            <div className="z-50 absolute bottom-40 -right-10 md:right-20 animate-pulse opacity-20 md:opacity-100 italic">
+            <div className="z-20 absolute bottom-40 -right-10 md:right-20 animate-pulse opacity-20 md:opacity-100 italic">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl shadow-indigo-500/10 transform rotate-6">
                     <Sparkles size={16} className="text-amber-500" />
                     <span className="text-xs font-bold font-mono">Leveling Up...</span>

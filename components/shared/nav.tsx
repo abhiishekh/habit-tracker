@@ -18,6 +18,7 @@ import {
 const Nav = () => {
     const pathname = usePathname()
     const [isAuthOpen, setIsAuthOpen] = useState(false)
+    const [open, setOpen] = useState(false);
     const [isPro, setIsPro] = useState(false)
     const { data: session, status } = useSession()
 
@@ -56,7 +57,7 @@ const Nav = () => {
 
 
                         {isLoggedIn ? (
-                            <DropdownMenu>
+                            <DropdownMenu open={open} onOpenChange={setOpen}>
                                 {isPro && (
                                     <span className="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
                                         PRO
@@ -82,7 +83,7 @@ const Nav = () => {
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setOpen(false)}>
                                         <Link
                                             href="/dashboard"
                                             className={`flex items-center w-full hover:text-indigo-500 transition-colors ${pathname === '/dashboard' ? 'text-indigo-500' : ''}`}
@@ -92,7 +93,7 @@ const Nav = () => {
                                         </Link>
                                     </DropdownMenuItem>
                                     {session?.user?.email === "abhisheaurya@gmail.com" && (
-                                        <DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setOpen(false)}>
                                             <Link
                                                 href="/admin"
                                                 className={`flex items-center w-full hover:text-indigo-500 transition-colors ${pathname === '/admin' ? 'text-indigo-500' : ''}`}
@@ -102,7 +103,7 @@ const Nav = () => {
                                             </Link>
                                         </DropdownMenuItem>
                                     )}
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setOpen(false)}>
                                         <Link
                                             href="/settings"
                                             className={`flex items-center w-full hover:text-indigo-500 transition-colors ${pathname === '/settings' ? 'text-indigo-500' : ''}`}
