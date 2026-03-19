@@ -81,27 +81,46 @@ export function TodoItem({ id, task, reminderTime, category, status, completed, 
   // };
 
   useEffect(() => {
-    if ("Notification" in window && Notification.permission !== "granted") {
-      Notification.requestPermission();
+    if (typeof window === "undefined") return;
+
+    try {
+      if ("Notification" in window) {
+        if (Notification.permission !== "granted") {
+          Notification.requestPermission().catch(() => { });
+        }
+      }
+    } catch (e) {
+      console.log("Notification not supported");
     }
   }, []);
   useEffect(() => {
+    if (typeof document === "undefined") return;
+
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        hasNotified.current = false; // reset when user comes back
+        hasNotified.current = false;
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
   const showNotification = (title: string, body: string) => {
-    if (Notification.permission === "granted") {
-      new Notification(title, {
-        body,
-        icon: "/icon.png", // optional
-      });
+    try {
+      if (
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        new Notification(title, {
+          body,
+          icon: "/icon.png",
+        });
+      }
+    } catch (e) {
+      console.log("Notification failed");
     }
   };
   const toggleComplete = async () => {
