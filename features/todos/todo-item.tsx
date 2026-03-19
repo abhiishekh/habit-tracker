@@ -21,7 +21,10 @@ export function TodoItem({ id, task, reminderTime, category, status, completed, 
   const hasNotified = useRef(false);
   const [isCompleted, setIsCompleted] = useState(completed || status === "completed");
   const [loading, setLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date(reminderTime));
+  const safeDate = new Date(reminderTime);
+  const [currentTime, setCurrentTime] = useState(
+    isNaN(safeDate.getTime()) ? new Date() : safeDate
+  );
 
   const playSuccessSound = useCallback(() => {
     const audio = new Audio("/audio/UFL_NOTIFICATION.mp3");
@@ -162,6 +165,10 @@ export function TodoItem({ id, task, reminderTime, category, status, completed, 
     }
 
     const calculateTime = () => {
+      if (!currentTime || isNaN(currentTime.getTime())) {
+        setTimeLeft("Invalid time");
+        return;
+      }
       const difference = currentTime.getTime() - new Date().getTime();
 
       if (difference <= 0) {
