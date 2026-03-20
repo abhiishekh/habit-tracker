@@ -121,11 +121,15 @@ export default function PricingClient({ config, isPro }: { config: any, isPro: b
                             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Pro Membership</h3>
                             <div className="flex items-end gap-3">
                                 <div className="text-5xl font-black text-slate-900 dark:text-white">
-                                    ${priceUsd} <span className="text-2xl text-slate-400 font-medium">/ {cycle === 'monthly' ? 'mo' : 'yr'}</span>
+                                    ₹{priceInr}
+                                    <span className="text-2xl text-slate-400 font-medium">
+                                        / {cycle === 'monthly' ? 'mo' : 'yr'}
+                                    </span>
                                 </div>
                             </div>
+
                             <div className="text-sm text-slate-500 font-medium mt-1">
-                                or ₹{priceInr} {cycle === 'monthly' ? 'per month' : 'per year'} (Indian Users)
+                                ≈ ${priceUsd} {cycle === 'monthly' ? 'per month' : 'per year'}
                             </div>
                         </div>
 
@@ -149,7 +153,7 @@ export default function PricingClient({ config, isPro }: { config: any, isPro: b
                                         className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg transition-all shadow-xl shadow-indigo-500/30 active:scale-[0.98] flex items-center gap-2"
                                     >
                                         {loadingStripe ? <UflLoaderInline style="flip" compact /> : <CreditCard size={20} />}
-                                        Pay with Stripe (International)
+                                        Pay Now
                                     </Button>
                                 )}
 
@@ -161,7 +165,7 @@ export default function PricingClient({ config, isPro }: { config: any, isPro: b
                                         className="w-full h-14 rounded-2xl border-slate-200 dark:border-zinc-800 bg-transparent hover:bg-slate-50 dark:hover:bg-zinc-900 text-slate-900 dark:text-white font-bold text-lg transition-all active:scale-[0.98] flex items-center gap-2"
                                     >
                                         {loadingRazorpay ? <UflLoaderInline style="flip" compact /> : <Wallet size={20} />}
-                                        Pay with Razorpay (India)
+                                        Pay Now
                                     </Button>
                                 )}
                             </div>

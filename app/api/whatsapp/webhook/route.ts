@@ -6,6 +6,18 @@ import { getGlobalWhatsappStatus } from '@/app/action';
 // Twilio signature validation (optional but recommended for production)
 const authToken = process.env.TWILIO_AUTH_TOKEN!;
 
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url);
+    const mode = searchParams.get('hub.mode');
+    const token = searchParams.get('hub.verify_token');
+    const challenge = searchParams.get('hub.challenge');
+
+    if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+        return new Response(challenge, { status: 200 });
+    }
+    return new Response('Forbidden', { status: 403 });
+}
+
 export async function POST(request: Request) {
     try {
         // Check Global Toggle
@@ -14,14 +26,36 @@ export async function POST(request: Request) {
             return new Response('WhatsApp reminders are globally disabled.', { status: 200 });
         }
 
-        const formData = await request.formData();
-        const body = formData.get('Body')?.toString().trim().toUpperCase();
-        const from = formData.get('From')?.toString(); // Format: whatsapp:+91XXXXXXXXXX
-        const phone = from?.replace('whatsapp:', '');
+        const contentType = request.headers.get('content-type') || '';
+        let phone = '';
+        let body = '';
+        let buttonPayload = '';
 
-        console.log(`Received WhatsApp reply from ${phone}: ${body}`);
+        if (contentType.includes('application/json')) {
+            // Meta (WhatsApp Business API)
+            const json = await request.json();
+            const message = json.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+            
+            if (!message) return new Response('No message found', { status: 200 });
 
-        if (!phone || !body) {
+            phone = message.from; // format: 91XXXXXXXXXX
+            if (message.type === 'interactive' && message.interactive?.type === 'button_reply') {
+                buttonPayload = message.interactive.button_reply.id;
+                body = message.interactive.button_reply.title.toUpperCase();
+            } else if (message.type === 'text') {
+                body = message.text.body.trim().toUpperCase();
+            }
+        } else {
+            // Twilio (Form Data)
+            const formData = await request.formData();
+            body = formData.get('Body')?.toString().trim().toUpperCase() || '';
+            const from = formData.get('From')?.toString(); // Format: whatsapp:+91XXXXXXXXXX
+            phone = from?.replace('whatsapp:', '') || '';
+        }
+
+        console.log(`Received WhatsApp reply from ${phone}: ${body} (Payload: ${buttonPayload})`);
+
+        if (!phone || (!body && !buttonPayload)) {
             return new Response('Invalid request', { status: 400 });
         }
 
@@ -31,7 +65,8 @@ export async function POST(request: Request) {
                 OR: [
                     { phone: phone },
                     { phone: phone.replace('+', '') },
-                    { phone: `+${phone}` }
+                    { phone: `+${phone}` },
+                    { phone: phone.startsWith('91') ? `+${phone}` : phone }
                 ]
             }
         });
@@ -41,57 +76,71 @@ export async function POST(request: Request) {
             return new Response('User not found', { status: 404 });
         }
 
-        // Find the most recent uncompleted todo that was notified
-        // Note: In a production app, you might want to track which todoId was sent in the session
-        const lastTodo = await prisma.todo.findFirst({
-            where: {
-                userId: user.id,
-                whatsappNotified: true,
-                completed: false
-            },
-            orderBy: {
-                updatedAt: 'desc'
-            }
-        });
+        let targetTodoId = '';
+        if (buttonPayload) {
+            if (buttonPayload.startsWith('DONE_')) targetTodoId = buttonPayload.replace('DONE_', '');
+            if (buttonPayload.startsWith('LATER_')) targetTodoId = buttonPayload.replace('LATER_', '');
+        }
 
-        if (!lastTodo) {
+        let todo;
+        if (targetTodoId) {
+            todo = await prisma.todo.findUnique({ where: { id: targetTodoId } });
+        } else {
+            // Fallback to last notified todo
+            todo = await prisma.todo.findFirst({
+                where: {
+                    userId: user.id,
+                    whatsappNotified: true,
+                    completed: false
+                },
+                orderBy: { updatedAt: 'desc' }
+            });
+        }
+
+        if (!todo) {
             return new Response('No pending todo found', { status: 200 });
         }
 
         let responseMessage = '';
 
-        if (body === '1' || body.includes('YES')) {
+        if (buttonPayload.startsWith('DONE_') || body === '1' || body.includes('DONE') || body.includes('YES')) {
             await prisma.todo.update({
-                where: { id: lastTodo.id },
+                where: { id: todo.id },
                 data: { completed: true, completedAt: new Date() }
             });
-            responseMessage = `Awesome job, ${user.name || 'there'}! ✅ Todo "${lastTodo.task}" marked as completed. Keep it up!`;
+            responseMessage = `Awesome job, ${user.name || 'there'}! ✅ Todo "${todo.task}" marked as completed. Keep it up!`;
         }
-        else if (body === '3' || body.includes('LATER')) {
+        else if (buttonPayload.startsWith('LATER_') || body === '3' || body.includes('LATER')) {
             const newTime = new Date(Date.now() + 30 * 60000); // 30 mins later
             await prisma.todo.update({
-                where: { id: lastTodo.id },
+                where: { id: todo.id },
                 data: {
                     reminderTime: newTime,
-                    whatsappNotified: false // Allow it to be notified again
+                    whatsappNotified: false
                 }
             });
-            responseMessage = `Understood! 🕒 I'll remind you about "${lastTodo.task}" again in 30 minutes.`;
+            responseMessage = `Understood! 🕒 I'll remind you about "${todo.task}" again in 30 minutes.`;
         }
         else if (body === '2' || body.includes('NO')) {
             responseMessage = `No problem! 👊 Focus on your work, I'm here if you need anything else.`;
         }
         else {
-            responseMessage = `Sorry, I didn't quite get that. Please reply with 1 (YES), 2 (NO), or 3 (LATER).`;
+            responseMessage = `Sorry, I didn't quite get that. Please use the buttons or reply with 1 (YES), 2 (NO), or 3 (LATER).`;
         }
 
-        // Respond to Twilio
-        const twiml = new twilio.twiml.MessagingResponse();
-        twiml.message(responseMessage);
-
-        return new Response(twiml.toString(), {
-            headers: { 'Content-Type': 'text/xml' }
-        });
+        // Response handling
+        if (contentType.includes('application/json')) {
+            // For Meta, we typically send a message back via API, not via the webhook response body
+            // But we can respond with 200 OK
+            return new Response('OK', { status: 200 });
+        } else {
+            // Respond to Twilio
+            const twiml = new twilio.twiml.MessagingResponse();
+            twiml.message(responseMessage);
+            return new Response(twiml.toString(), {
+                headers: { 'Content-Type': 'text/xml' }
+            });
+        }
 
     } catch (error) {
         console.error('Webhook error:', error);

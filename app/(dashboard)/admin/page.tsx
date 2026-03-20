@@ -118,18 +118,50 @@ const AdminDashboard = () => {
                         />
                     </div>
 
-                    <div className="mt-6 flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-zinc-900/50">
-                        {isGlobalEnabled ? (
-                            <>
-                                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                <span className="text-sm font-medium text-green-600 dark:text-green-400 italic">Systems are active and reminders are sending.</span>
-                            </>
-                        ) : (
-                            <>
-                                <AlertTriangle className="h-4 w-4 text-orange-500" />
-                                <span className="text-sm font-medium text-orange-600 dark:text-orange-400 italic">reminders are currently suspended globally.</span>
-                            </>
-                        )}
+                    <div className="mt-6 space-y-4">
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-50 dark:bg-zinc-900/50">
+                            {isGlobalEnabled ? (
+                                <>
+                                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                    <span className="text-sm font-medium text-green-600 dark:text-green-400 italic">Systems are active and reminders are sending.</span>
+                                </>
+                            ) : (
+                                <>
+                                    <AlertTriangle className="h-4 w-4 text-orange-500" />
+                                    <span className="text-sm font-medium text-orange-600 dark:text-orange-400 italic">reminders are currently suspended globally.</span>
+                                </>
+                            )}
+                        </div>
+
+                        <div className="pt-4 border-t border-slate-100 dark:border-zinc-800">
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-3 uppercase tracking-wider">Default Messaging Provider</label>
+                            <div className="flex flex-wrap gap-3">
+                                {[
+                                    { id: 'twilio', label: 'Twilio' },
+                                    { id: 'meta', label: 'Meta (Cloud API)' },
+                                    { id: 'local', label: 'Local (WhatsApp Web)' }
+                                ].map((provider) => (
+                                    <label 
+                                        key={provider.id}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 cursor-pointer transition-all ${
+                                            subConfig.whatsapp_provider === provider.id
+                                                ? "border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400"
+                                                : "border-slate-100 bg-slate-50 text-slate-500 dark:border-zinc-800 dark:bg-zinc-900"
+                                        }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="whatsapp_provider"
+                                            value={provider.id}
+                                            checked={subConfig.whatsapp_provider === provider.id}
+                                            onChange={(e) => setSubConfig({ ...subConfig, whatsapp_provider: e.target.value })}
+                                            className="hidden"
+                                        />
+                                        <span className="text-xs font-bold uppercase tracking-tight">{provider.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
 

@@ -4,6 +4,7 @@ import { TodoItem } from "@/features/todos/todo-item";
 import { Plus, ClipboardList, Smartphone, Send, Sparkles, Loader2, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { UflLoaderInline } from "@/components/ui/ufl-loader";
 import { AiGoalAssistant } from "@/features/ai-goals/ai-goal-assistant";
+import { ForestView } from "@/features/forest/forest-view";
 
 import { useState, useEffect, useMemo } from "react";
 import { toggleWhatsapp, sendTestWhatsapp } from "@/app/action";
@@ -184,6 +185,8 @@ export default function TodosPage() {
                     </button>
                 </div>
             </div>
+            
+            <ForestView />
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-24 gap-6">

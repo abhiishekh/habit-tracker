@@ -1,9 +1,7 @@
 import twilio from 'twilio';
 import axios from 'axios';
-
-
-const META_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
-const META_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+import { prisma } from '@/lib/prisma';
+import { DEFAULT_SUBSCRIPTION_CONFIG } from '@/lib/constants';
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -11,33 +9,17 @@ const fromPhone = process.env.TWILIO_WHATSAPP_FROM;
 
 const client = twilio(accountSid, authToken);
 
-
-export async function sendWhatsAppReminderMeta(userPhone: any, taskName: any) {
-  const response = await fetch(
-    `https://graph.facebook.com/v21.0/${process.env.WA_PHONE_NUMBER_ID}/messages`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.WA_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: userPhone,
-        type: "template",
-        template: {
-          name: "task_reminder",
-          language: { code: "en" },
-          components: [{
-            type: "body",
-            parameters: [{ type: "text", text: taskName }]
-          }]
-        }
-      }),
-    }
-  );
-  return response.json();
+export async function getWhatsAppProvider(): Promise<'meta' | 'twilio' | 'local'> {
+  try {
+    const config = await prisma.systemConfig.findUnique({
+      where: { key: 'whatsapp_provider' }
+    });
+    return (config?.value as any) || DEFAULT_SUBSCRIPTION_CONFIG.whatsapp_provider as any || 'twilio';
+  } catch (error) {
+    return 'twilio';
+  }
 }
+
 
 export async function sendWhatsAppReminderTwilio(to: string, taskName: string) {
   try {
@@ -54,13 +36,16 @@ export async function sendWhatsAppReminderTwilio(to: string, taskName: string) {
   }
 }
 
-export async function sendWhatsAppReminder(to: string, taskName: string, provider: 'meta' | 'twilio' = 'meta') {
+export async function sendWhatsAppReminder(to: string, taskName: string, provider: 'meta' | 'twilio' | 'local' = 'meta') {
+  const META_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WA_TOKEN;
+  const META_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.WA_PHONE_NUMBER_ID;
+
   if (provider === 'meta') {
     try {
       // Meta requires a specific format: 91XXXXXXXXXX (no +)
       const formattedPhone = to.replace('+', '');
 
-      return await axios.post(
+      const response = await axios.post(
         `https://graph.facebook.com/v21.0/${META_PHONE_ID}/messages`,
         {
           messaging_product: 'whatsapp',
@@ -79,6 +64,7 @@ export async function sendWhatsAppReminder(to: string, taskName: string, provide
         },
         { headers: { Authorization: `Bearer ${META_TOKEN}` } }
       );
+      return response.data;
     } catch (error) {
       console.error('Meta API failed, falling back to Twilio...');
       // Optional: Automatic fallback to Twilio if Meta fails
@@ -102,19 +88,63 @@ export async function sendInteractiveWhatsAppReminder(
   taskName: string,
   userName: string,
   todoId: string,
-  provider: 'meta' | 'twilio' = 'twilio'
+  provider: 'meta' | 'twilio' | 'local' = 'meta'
 ) {
-  const message = `Hey ${userName}! 🌟\n\nYour todo "${taskName}" is about to end. Have you completed it yet?\n\nReply with:\n1️⃣ YES (to mark as done)\n2️⃣ NO (to keep it pending)\n3️⃣ LATER (remind in 30 mins)`;
+  const formattedPhone = to.replace('+', '');
+  const messageText = `Hey ${userName}! 🌟\n\nYour todo "${taskName}" is scheduled for now. Have you completed it?`;
+
+  const META_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WA_TOKEN;
+  const META_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.WA_PHONE_NUMBER_ID;
 
   if (provider === 'meta') {
-    // Meta implementation would ideally use a Template with Buttons
-    // For now, using the fallback logic similar to sendWhatsAppReminder
-    return sendWhatsAppReminder(to, message, 'meta');
-  } else {
-    // Twilio implementation
+    try {
+      const response = await axios.post(
+        `https://graph.facebook.com/v21.0/${META_PHONE_ID}/messages`,
+        {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: formattedPhone,
+          type: 'interactive',
+          interactive: {
+            type: 'button',
+            body: {
+              text: messageText
+            },
+            action: {
+              buttons: [
+                {
+                  type: 'reply',
+                  reply: {
+                    id: `DONE_${todoId}`,
+                    title: 'Done ✅'
+                  }
+                },
+                {
+                  type: 'reply',
+                  reply: {
+                    id: `LATER_${todoId}`,
+                    title: 'Later 🕒'
+                  }
+                }
+              ]
+            }
+          }
+        },
+        { headers: { Authorization: `Bearer ${META_TOKEN}` } }
+      );
+      return { success: true, data: response.data };
+    } catch (error: any) {
+      console.error('Meta Interactive Error:', error.response?.data || error.message);
+      // Fallback to text message if interactive fails (e.g., outside 24h window)
+      return sendWhatsAppReminder(to, `${messageText}\n\nReply with "1" for Done or "3" for Later.`, 'meta');
+    }
+  } else if (provider === 'twilio') {
+    // Twilio implementation - Twilio also supports interactive messages but simpler to stick to text 
+    // or use their specific interactive format if the user has it set up.
+    // For now, keeping Twilio as text fallback as it's more reliable across different Twilio tiers.
     try {
       const result = await client.messages.create({
-        body: message,
+        body: `${messageText}\n\n1️⃣ Done\n2️⃣ Not yet\n3️⃣ Later`,
         from: fromPhone,
         to: `whatsapp:${to.startsWith('+') ? to : '+' + to}`
       });
@@ -123,5 +153,9 @@ export async function sendInteractiveWhatsAppReminder(
       console.error('Twilio Interactive Error:', error);
       throw error;
     }
+  } else {
+    // 'local' implementation - Placeholder for now
+    console.log(`[WhatsApp: Local] Sending to ${to}: ${messageText}`);
+    return { success: true, provider: 'local', message: 'Logged locally' };
   }
-}
+}
