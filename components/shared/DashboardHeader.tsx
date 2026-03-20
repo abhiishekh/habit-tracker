@@ -59,7 +59,7 @@ export default function DashboardHeader({ isPro }: { isPro: boolean }) {
                         <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg">
                             H
                         </div>
-                        <span className="font-bold text-slate-900 dark:text-white lg:hidden">HabitTracker</span>
+                        <span className="font-bold text-slate-900 dark:text-white lg:hidden">Habit AI</span>
                     </Link>
                 </div>
 
@@ -83,7 +83,7 @@ export default function DashboardHeader({ isPro }: { isPro: boolean }) {
                                 <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                                     H
                                 </div>
-                                <span className="font-black text-xl tracking-tight text-slate-900 dark:text-white">HabitTracker</span>
+                                <span className="font-black text-xl tracking-tight text-slate-900 dark:text-white">Habit AI</span>
                             </Link>
                             <button onClick={() => setIsOpen(false)} className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-full bg-slate-50 dark:bg-zinc-900">
                                 <X size={20} />

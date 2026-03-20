@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendInteractiveWhatsAppReminder } from '@/services/whatsapp';
+import { sendInteractiveWhatsAppReminder, getWhatsAppProvider } from '@/services/whatsapp';
 import { getGlobalWhatsappStatus } from '@/app/action';
 
 export const dynamic = 'force-dynamic';
@@ -49,13 +49,14 @@ export async function GET(request: Request) {
     for (const todo of todos) {
       if (todo?.user?.phone) {
         try {
-          // Use 'twilio' as primary provider for interactive messages if meta template isn't ready
+          const provider = await getWhatsAppProvider();
+          
           await sendInteractiveWhatsAppReminder(
             todo.user.phone,
             todo.task,
             todo.user.name || 'User',
             todo.id,
-            'twilio'
+            provider
           );
 
           await prisma.todo.update({

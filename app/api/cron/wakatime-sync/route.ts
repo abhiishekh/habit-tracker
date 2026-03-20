@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { fetchTodayStats } from "@/lib/vscodeStats";
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get('secret');
     const authHeader = request.headers.get('authorization');

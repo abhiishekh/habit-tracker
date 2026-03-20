@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/wakatime-sync",
       "schedule": "18 18 * * *"
+    },
+    {
+      "path": "/api/cron/daily-goals",
+      "schedule": "0 5 * * *"
     }
   ]
 }

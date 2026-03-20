@@ -12,6 +12,7 @@ const navItems = [
     { name: "Workouts", href: "/workouts", icon: Dumbbell, key: "feature_workouts" },
     { name: "Habits", href: "/habits", icon: Flame, key: "feature_habits" },
     { name: "Challenges", href: "/challenges", icon: Target, key: "feature_challenges" },
+    { name: "Daily Goals", href: "/daily-goals", icon: Bot, key: "feature_daily_goals" },
     { name: "Todos", href: "/todos", icon: List, key: "feature_todos" },
     { name: "Insights", href: "/insights", icon: InfoIcon, key: "feature_insights" },
     { name: "Coding", href: "/coding", icon: Code2 },

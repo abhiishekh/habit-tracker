@@ -123,15 +123,29 @@ export function TodoItem({ id, task, reminderTime, category, status, completed, 
       console.log("Notification failed");
     }
   };
-  const toggleComplete = async () => {
+  const toggleComplete = async (e: React.MouseEvent) => {
     if (!id) return;
 
     const nextState = !isCompleted;
+    const isOnTime = timeLeft !== "Time's up!";
 
     setIsCompleted(nextState);
     onToggleComplete?.(id, nextState);
+    
     if (nextState) {
       triggerCelebration();
+      
+      // Trigger leaf fly animation
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const event = new CustomEvent('todo:leaf-fly', {
+        detail: {
+          startX: rect.left + rect.width / 2,
+          startY: rect.top + rect.height / 2,
+          isOnTime
+        }
+      });
+      window.dispatchEvent(event);
+      
       toast.success("Task completed 🎉", {
         description: task,
       });
