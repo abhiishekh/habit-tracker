@@ -2,12 +2,8 @@
   "crons": [
     
     {
-      "path": "/api/cron/eod-analysis",
-      "schedule": "0 22 * * *"
-    },
-    {
       "path": "/api/cron/wakatime-sync",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
