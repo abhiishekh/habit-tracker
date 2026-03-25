@@ -1,13 +1,7 @@
 {
   "crons": [
-    {
-      "path": "/api/cron/test-reminders",
-      "schedule": "* * * * *"
-    },
-    {
-      "path": "/api/cron/whatsapp-reminders",
-      "schedule": "*/5 * * * *"
-    },
+    
+    
     {
       "path": "/api/cron/daily-goals",
       "schedule": "0 5 * * *"
