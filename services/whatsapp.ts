@@ -2,6 +2,12 @@ import twilio from 'twilio';
 import axios from 'axios';
 import { prisma } from '@/lib/prisma';
 import { DEFAULT_SUBSCRIPTION_CONFIG } from '@/lib/constants';
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Meta WhatsApp Cloud API config
+const META_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WA_TOKEN;
+const META_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.WA_PHONE_NUMBER_ID;
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -36,15 +42,38 @@ export async function sendWhatsAppReminderTwilio(to: string, taskName: string) {
   }
 }
 
-export async function sendWhatsAppReminder(to: string, taskName: string, provider: 'meta' | 'twilio' | 'local' = 'meta') {
-  const META_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WA_TOKEN;
-  const META_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.WA_PHONE_NUMBER_ID;
+/**
+ * Send a plain text message via Meta WhatsApp Cloud API.
+ * Used for replies from webhook and general text messages.
+ */
+export async function sendMetaTextMessage(to: string, message: string) {
+  const formattedPhone = to.replace('+', '');
+
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/v21.0/${META_PHONE_ID}/messages`,
+      {
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: formattedPhone,
+        type: 'text',
+        text: { body: message }
+      },
+      { headers: { Authorization: `Bearer ${META_TOKEN}` } }
+    );
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    console.error('Meta Text Message Error:', error.response?.data || error.message);
+    throw new Error('Failed to send Meta WhatsApp text message');
+  }
+}
+
+export async function sendWhatsAppReminder(to: string, userName: string, taskName: string, provider: 'meta' | 'twilio' | 'local' = 'meta') {
 
   if (provider === 'meta') {
     try {
       // Meta requires a specific format: 91XXXXXXXXXX (no +)
       const formattedPhone = to.replace('+', '');
-
       const response = await axios.post(
         `https://graph.facebook.com/v21.0/${META_PHONE_ID}/messages`,
         {
@@ -52,12 +81,15 @@ export async function sendWhatsAppReminder(to: string, taskName: string, provide
           to: formattedPhone,
           type: 'template',
           template: {
-            name: 'task_reminder', // Ensure this matches your approved Meta template
-            language: { code: 'en_US' },
+            name: 'habit_reminder',
+            language: { code: 'en' },
             components: [
               {
                 type: 'body',
-                parameters: [{ type: 'text', text: taskName }]
+                parameters: [
+                  { type: 'text', text: userName }, // {{1}} -> User Name
+                  { type: 'text', text: taskName }  // {{2}} -> Habit Name
+                ]
               }
             ]
           }
@@ -66,12 +98,60 @@ export async function sendWhatsAppReminder(to: string, taskName: string, provide
       );
       return response.data;
     } catch (error) {
-      console.error('Meta API failed, falling back to Twilio...');
+      console.error('Meta API failed, falling back to Twilio...', error);
       // Optional: Automatic fallback to Twilio if Meta fails
       return sendTwilioMessage(to, taskName);
     }
   } else {
     return sendTwilioMessage(to, taskName);
+  }
+}
+export async function sendUserAnalytics(
+  to: string, 
+  userName: string, 
+  taskCount: number, 
+  completionRate: string
+) {
+  const formattedPhone = to.replace(/\D/g, '');
+
+  try {
+    const response = await axios.post(
+      `https://graph.facebook.com/v21.0/${META_PHONE_ID}/messages`,
+      {
+        messaging_product: 'whatsapp',
+        to: formattedPhone,
+        type: 'template',
+        template: {
+          name: 'daily_summary_ufl', 
+          language: { code: 'en' },
+          components: [
+            {
+              type: 'body',
+              parameters: [
+                { type: 'text', text: userName },   
+                { type: 'text', text: String(taskCount) },
+                { type: 'text', text: completionRate }
+              ]
+            },
+            {
+              type: 'button',
+              sub_type: 'url',
+              index: '0',
+              parameters: [
+                { type: 'text', text: "dashboard" } 
+              ]
+            }
+          ]
+        }
+      },
+      { headers: { Authorization: `Bearer ${META_TOKEN}` } }
+    );
+
+    console.log("✅ Analytics Sent:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Meta Analytics Error:', error.response?.data || error.message);
+    throw error;
   }
 }
 
@@ -92,9 +172,6 @@ export async function sendInteractiveWhatsAppReminder(
 ) {
   const formattedPhone = to.replace('+', '');
   const messageText = `Hey ${userName}! 🌟\n\nYour todo "${taskName}" is scheduled for now. Have you completed it?`;
-
-  const META_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || process.env.WA_TOKEN;
-  const META_PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || process.env.WA_PHONE_NUMBER_ID;
 
   if (provider === 'meta') {
     try {
@@ -158,4 +235,4 @@ export async function sendInteractiveWhatsAppReminder(
     console.log(`[WhatsApp: Local] Sending to ${to}: ${messageText}`);
     return { success: true, provider: 'local', message: 'Logged locally' };
   }
-}
+}

@@ -13,7 +13,7 @@ export const DEFAULT_SUBSCRIPTION_CONFIG = {
     feature_challenges: "true",
     feature_workouts: "true",
     feature_daily_goals: "true",
-    whatsapp_provider: "twilio" // "meta" | "twilio" | "local"
+    whatsapp_provider: "meta" // "meta" | "twilio" | "local"
 };
 
 export enum SessionStatus {

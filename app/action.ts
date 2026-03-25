@@ -3,19 +3,31 @@
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { sendWhatsAppReminderTwilio } from '@/services/whatsapp';
+import { sendWhatsAppReminder, getWhatsAppProvider, sendMetaTextMessage, sendUserAnalytics } from '@/services/whatsapp';
 
 export async function saveUserPhone(phoneNumber: string) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) throw new Error("Unauthorized");
 
-  return await prisma.user.update({
+  const updatedUser = await prisma.user.update({
     where: { email: session.user.email },
     data: {
       phone: phoneNumber,
       whatsappEnabled: true,
     },
   });
+
+  try {
+    // Send a welcome message upon setting up the number
+    await sendMetaTextMessage(
+      phoneNumber, 
+      "Welcome to UFL the real tracking system! 👋\n\nI'll be sending you reminders for your tasks here. Reply with '1' or 'Done' when you complete a task!"
+    );
+  } catch (error) {
+    console.error("Failed to send WhatsApp welcome message:", error);
+  }
+
+  return updatedUser;
 }
 
 export async function saveUserApiKeys(data: {
@@ -73,8 +85,16 @@ export async function sendTestWhatsapp() {
   });
 
   if (!user?.phone) throw new Error("Phone number not set");
-
-  return await sendWhatsAppReminderTwilio(user.phone, "Test Message from Habit Tracker!");
+  const provider = await getWhatsAppProvider();
+  // await sendUserAnalytics(
+  //   user.phone,
+  //   "Abhishek",
+  //   3,
+  //   "85%"
+  // );
+  // await sendWhatsAppReminder(user.phone,"Abhishek", "Test Message from Habit Tracker!", provider);
+  await sendMetaTextMessage(user.phone,"hello this is test message from UFL!")
+  return { success: true };
 }
 
 export async function getGlobalWhatsappStatus() {

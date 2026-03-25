@@ -1,4 +1,4 @@
-import { headers } from 'next/headers';
+
 import { NextResponse } from 'next/server';
 import { stripe } from '@/services/stripe';
 import { prisma } from '@/lib/prisma';
@@ -6,7 +6,7 @@ import Stripe from 'stripe';
 
 export async function POST(req: Request) {
     const body = await req.text();
-    const signature = (await headers()).get('Stripe-Signature') as string;
+    const signature = req.headers.get('stripe-signature') as string;
 
     let event: Stripe.Event;
 

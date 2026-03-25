@@ -2,22 +2,28 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import twilio from 'twilio';
 import { getGlobalWhatsappStatus } from '@/app/action';
+import { sendMetaTextMessage } from '@/services/whatsapp';
 
 // Twilio signature validation (optional but recommended for production)
 const authToken = process.env.TWILIO_AUTH_TOKEN!;
 
+// ─── META WEBHOOK VERIFICATION ─────────────────────────────────────────────
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const mode = searchParams.get('hub.mode');
     const token = searchParams.get('hub.verify_token');
     const challenge = searchParams.get('hub.challenge');
 
+    // Meta sends this GET request to verify your webhook URL
     if (mode === 'subscribe' && token === process.env.WHATSAPP_VERIFY_TOKEN) {
+        console.log('✅ Webhook verified successfully by Meta');
         return new Response(challenge, { status: 200 });
     }
+    console.warn('❌ Webhook verification failed. Token mismatch.');
     return new Response('Forbidden', { status: 403 });
 }
 
+// ─── INCOMING MESSAGE HANDLER ──────────────────────────────────────────────
 export async function POST(request: Request) {
     try {
         // Check Global Toggle
@@ -30,10 +36,14 @@ export async function POST(request: Request) {
         let phone = '';
         let body = '';
         let buttonPayload = '';
+        let isMeta = false;
 
         if (contentType.includes('application/json')) {
-            // Meta (WhatsApp Business API)
+            // ─── META (WhatsApp Business Cloud API) ────────────────────────
+            isMeta = true;
             const json = await request.json();
+
+            // Meta sends status updates (delivered, read, etc.) — ignore them
             const message = json.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
             
             if (!message) return new Response('No message found', { status: 200 });
@@ -46,14 +56,14 @@ export async function POST(request: Request) {
                 body = message.text.body.trim().toUpperCase();
             }
         } else {
-            // Twilio (Form Data)
+            // ─── TWILIO (Form Data) ────────────────────────────────────────
             const formData = await request.formData();
             body = formData.get('Body')?.toString().trim().toUpperCase() || '';
             const from = formData.get('From')?.toString(); // Format: whatsapp:+91XXXXXXXXXX
             phone = from?.replace('whatsapp:', '') || '';
         }
 
-        console.log(`Received WhatsApp reply from ${phone}: ${body} (Payload: ${buttonPayload})`);
+        console.log(`📩 Received WhatsApp reply from ${phone}: ${body} (Payload: ${buttonPayload})`);
 
         if (!phone || (!body && !buttonPayload)) {
             return new Response('Invalid request', { status: 400 });
@@ -73,6 +83,12 @@ export async function POST(request: Request) {
 
         if (!user) {
             console.error(`User not found for phone: ${phone}`);
+            // Still reply so the user knows something is wrong
+            if (isMeta) {
+                try {
+                    await sendMetaTextMessage(phone, "Sorry, I couldn't find your account. Please make sure your phone number is linked in the Habit Tracker app.");
+                } catch (e) { /* ignore send errors for unlinked users */ }
+            }
             return new Response('User not found', { status: 404 });
         }
 
@@ -98,6 +114,10 @@ export async function POST(request: Request) {
         }
 
         if (!todo) {
+            const noTodoMsg = `Hey ${user.name || 'there'}! 👋 You don't have any pending todos right now. Keep up the great work!`;
+            if (isMeta) {
+                await sendMetaTextMessage(phone, noTodoMsg);
+            }
             return new Response('No pending todo found', { status: 200 });
         }
 
@@ -128,13 +148,18 @@ export async function POST(request: Request) {
             responseMessage = `Sorry, I didn't quite get that. Please use the buttons or reply with 1 (YES), 2 (NO), or 3 (LATER).`;
         }
 
-        // Response handling
-        if (contentType.includes('application/json')) {
-            // For Meta, we typically send a message back via API, not via the webhook response body
-            // But we can respond with 200 OK
+        // ─── SEND REPLY BACK ───────────────────────────────────────────────
+        if (isMeta) {
+            // Send reply via Meta WhatsApp Cloud API
+            try {
+                await sendMetaTextMessage(phone, responseMessage);
+                console.log(`✅ Meta reply sent to ${phone}`);
+            } catch (error) {
+                console.error('Failed to send Meta reply:', error);
+            }
             return new Response('OK', { status: 200 });
         } else {
-            // Respond to Twilio
+            // Respond to Twilio via TwiML
             const twiml = new twilio.twiml.MessagingResponse();
             twiml.message(responseMessage);
             return new Response(twiml.toString(), {
