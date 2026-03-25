@@ -1,15 +1,6 @@
 {
   "crons": [
     
-    
-    {
-      "path": "/api/cron/daily-goals",
-      "schedule": "0 5 * * *"
-    },
-    {
-      "path": "/api/cron/morning-briefing",
-      "schedule": "0 7 * * *"
-    },
     {
       "path": "/api/cron/eod-analysis",
       "schedule": "0 22 * * *"
