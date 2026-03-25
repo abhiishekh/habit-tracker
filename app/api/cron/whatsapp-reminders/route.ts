@@ -6,15 +6,13 @@ import { getGlobalWhatsappStatus } from '@/app/action';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET(request: Request) {
-  // 1. Security Check (Only allow the cron provider to call this)
-  const authHeader = request.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+export async function POST(request: Request) {
+  console.log("⏰ [Cron] Reminder Check Started at:", new Date().toLocaleTimeString());
 
   // 1.5 Global Toggle Check
   const isGlobalEnabled = await getGlobalWhatsappStatus();
+  console.log("Global Status:", isGlobalEnabled ? "✅ Enabled" : "❌ Disabled");
+  
   if (!isGlobalEnabled) {
     return NextResponse.json({ success: true, processed: 0, message: "WhatsApp reminders are globally disabled." });
   }
@@ -22,8 +20,10 @@ export async function GET(request: Request) {
   try {
     const now = new Date();
     const fiveMinsFromNow = new Date(now.getTime() + 5 * 60000);
+    
+    console.log(`🔍 Searching for todos between [${now.toISOString()}] and [${fiveMinsFromNow.toISOString()}]`);
 
-    // 2. Find todos due in the next 5 minutes for users with WhatsApp enabled
+    // 2. Find todos
     const todos = await prisma.todo.findMany({
       where: {
         reminderTime: { lte: fiveMinsFromNow, gte: now },
@@ -36,21 +36,22 @@ export async function GET(request: Request) {
       },
       include: {
         user: {
-          select: {
-            phone: true,
-            name: true,
-          }
+          select: { phone: true, name: true }
         }
       }
     });
 
-    // 3. Send interactive notifications and Update status
+    console.log(`📊 Found ${todos.length} pending todos for notification.`);
+
     const results = [];
     for (const todo of todos) {
+      console.log(`📤 Processing Todo ID: ${todo.id} | Task: ${todo.task} | User: ${todo.user?.name}`);
+
       if (todo?.user?.phone) {
         try {
           const provider = await getWhatsAppProvider();
-          
+          console.log(`⚙️ Using Provider: ${provider} for ${todo.user.phone}`);
+
           await sendInteractiveWhatsAppReminder(
             todo.user.phone,
             todo.task,
@@ -63,11 +64,15 @@ export async function GET(request: Request) {
             where: { id: todo.id },
             data: { whatsappNotified: true }
           });
+          
+          console.log(`✅ Successfully notified and updated Todo: ${todo.id}`);
           results.push({ id: todo.id, status: 'success' });
-        } catch (error) {
-          console.error(`Failed to send interactive WhatsApp to ${todo.user.phone}:`, error);
-          results.push({ id: todo.id, status: 'error', error: String(error) });
+        } catch (error: any) {
+          console.error(`❌ Failed to send to ${todo.user.phone}:`, error.message);
+          // results.push({ id: id: todo.id, status: 'error', error: String(error) });
         }
+      } else {
+        console.warn(`⚠️ User for Todo ${todo.id} has no phone number.`);
       }
     }
 
@@ -77,7 +82,7 @@ export async function GET(request: Request) {
       results
     });
   } catch (error: any) {
-    console.error('Cron error:', error);
+    console.error('🔥 Heavy Cron error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
