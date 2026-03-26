@@ -16,6 +16,7 @@ export async function PATCH(
         }
 
         const { completed, reminderTime, extraTime } = await req.json();
+        const updateData: any = {};
 
         // Fetch current todo to check its state
         const currentTodo = await prisma.todo.findUnique({
@@ -41,13 +42,26 @@ export async function PATCH(
             }
         }
 
-        const updateData: any = {};
         if (completed !== undefined) {
             updateData.completed = completed;
             if (completed === true && !currentTodo.completed) {
                 updateData.completedAt = new Date();
+
+                // Award XP
+                const earnedXp = (currentTodo.plannedTime || 10) * 2;
+                await prisma.user.update({
+                    where: { id: currentTodo.userId },
+                    data: { xp: { increment: earnedXp } }
+                });
             } else if (completed === false) {
                 updateData.completedAt = null;
+
+                // Remove XP
+                const earnedXp = (currentTodo.plannedTime || 10) * 2;
+                await prisma.user.update({
+                    where: { id: currentTodo.userId },
+                    data: { xp: { decrement: earnedXp } }
+                });
             }
         }
 

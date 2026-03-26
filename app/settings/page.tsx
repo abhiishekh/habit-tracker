@@ -20,12 +20,17 @@ export default function SettingsPage() {
   const [twitterKey, setTwitterKey] = useState('');
   const [integrationsLoading, setIntegrationsLoading] = useState(false);
   const [isPro, setIsPro] = useState<boolean | null>(null);
+  const [xp, setXp] = useState(0);
 
   useEffect(() => {
     const fetchSubStatus = async () => {
       if ((session?.user as any)?.id) {
         const limits = await fetchUserSubscriptionTier();
         setIsPro(limits.plan === 'pro');
+        
+        const { getUserXp } = await import('@/app/action');
+        const xpData = await getUserXp();
+        setXp(xpData.xp);
       }
     };
     fetchSubStatus();
@@ -145,6 +150,20 @@ export default function SettingsPage() {
               </button>
             </div>
           </form>
+
+          {/* Gamification Progress */}
+          <div className="mt-8 p-5 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 rounded-2xl border border-amber-200 dark:border-amber-900/30 flex items-center justify-between shadow-sm">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">Gamification Progress</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Complete tasks to earn XP and level up!</p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-black text-amber-600 dark:text-amber-500">{xp} XP</div>
+              <div className="text-[10px] font-black tracking-widest uppercase text-amber-700/60 dark:text-amber-400/60">
+                Level {Math.floor(xp / 100) + 1}
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Subscription Tier Banner */}

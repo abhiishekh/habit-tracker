@@ -22,44 +22,32 @@ interface FlyingLeaf {
   color: string;
 }
 
-export const ForestView = () => {
+export const ForestView = ({ tasks = [] }: { tasks?: any[] }) => {
   const [trees, setTrees] = useState<TreeData[]>([]);
   const [flyingLeaves, setFlyingLeaves] = useState<FlyingLeaf[]>([]);
   const forestRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('/api/forest')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setTrees(data);
-      });
-  }, []);
-
-  const addTree = useCallback((health: 'healthy' | 'weak') => {
-    if (!forestRef.current) return;
+    if (!tasks) return;
     
-    const newTree: TreeData = {
-      id: Math.random().toString(36).substr(2, 9),
-      x: Math.random() * 80 + 10,
-      y: Math.random() * 60 + 20,
-      scale: Math.random() * 0.5 + 0.8,
-      health,
-      createdAt: Date.now(),
-    };
-    
-    setTrees(prev => {
-      const updated = [...prev, newTree].slice(-50);
+    const completedTasks = tasks.filter(t => t.completed).slice(-50);
+    const generatedTrees = completedTasks.map((t) => {
+      let hash = 0;
+      for (let i = 0; i < t.id.length; i++) hash = Math.imul(31, hash) + t.id.charCodeAt(i) | 0;
+      const idSeed = Math.abs(hash);
       
-      // Save to API
-      fetch('/api/forest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trees: updated })
-      });
-      
-      return updated;
+      return {
+        id: t.id,
+        x: (idSeed % 80) + 10,
+        y: ((idSeed * 13) % 60) + 20,
+        scale: ((idSeed * 7) % 50) / 100 + 0.8,
+        health: 'healthy',
+        createdAt: new Date(t.completedAt || t.createdAt).getTime(),
+      } as TreeData;
     });
-  }, []);
+    
+    setTrees(generatedTrees);
+  }, [tasks]);
 
   useEffect(() => {
     const handleLeafFly = (e: any) => {
@@ -83,16 +71,15 @@ export const ForestView = () => {
 
       setFlyingLeaves(prev => [...prev, newLeaf]);
 
-      // After animation, add the tree
+      // Animation only, the tree is added via tasks array update
       setTimeout(() => {
         setFlyingLeaves(prev => prev.filter(l => l.id !== leafId));
-        addTree(isOnTime ? 'healthy' : 'weak');
       }, 1000); // Duration of leaf animation
     };
 
     window.addEventListener('todo:leaf-fly', handleLeafFly);
     return () => window.removeEventListener('todo:leaf-fly', handleLeafFly);
-  }, [addTree]);
+  }, []);
 
   return (
     <div className="relative w-full overflow-hidden ">
