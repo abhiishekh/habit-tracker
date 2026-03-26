@@ -2,6 +2,7 @@ import Link from 'next/link'
 import HabitImpactGraph from '../HabitImpactGraph'
 import AnimatedGradient from '../AnimatedGradient'
 import { Sparkles, MessageSquare, Terminal, ArrowRight } from 'lucide-react'
+import { AvatarGroupCountIconExample } from './avatarGroup'
 
 const HeroSection = () => {
     return (
@@ -80,6 +81,10 @@ const HeroSection = () => {
                     >
                         View Progress
                     </Link>
+                </div>
+                <div className='pt-5 flex-col justify-center items-center'>
+                    <div className='w-full flex justify-center'><AvatarGroupCountIconExample /></div>
+                    <span>12+ users</span>
                 </div>
 
                 <p className="mt-8 text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-zinc-600 opacity-50">
