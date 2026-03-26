@@ -106,12 +106,19 @@ export async function PATCH(
             const allCompleted = allSessions.every(s => s.status === "COMPLETED");
 
             if (allCompleted) {
-                await prisma.todo.update({
+                const updatedTodo = await prisma.todo.update({
                     where: { id: id },
                     data: {
                         completed: true,
                         completedAt: now
                     }
+                });
+                
+                // Award XP for completing the whole task
+                const earnedXp = (updatedTodo.plannedTime || 10) * 2;
+                await prisma.user.update({
+                    where: { id: updatedTodo.userId },
+                    data: { xp: { increment: earnedXp } }
                 });
             }
         }

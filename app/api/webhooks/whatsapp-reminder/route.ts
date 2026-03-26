@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { sendMetaTextMessage } from '@/services/whatsapp';
 
 // 1. GET: Webhook Verification (Meta Dashboard के लिए)
 export async function GET(req: NextRequest) {
@@ -20,22 +22,64 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
     console.log("📩 New Webhook Event:", JSON.stringify(body, null, 2));
 
     const entry = body.entry?.[0];
     const changes = entry?.changes?.[0];
     const message = changes?.value?.messages?.[0];
 
-    if (message?.type === 'button') {
-      const buttonText = message.button.text; 
-      const buttonPayload = message.button.payload; 
-      const from = message.from; 
+    if (!message) {
+      return NextResponse.json({ status: 'ok' }, { status: 200 });
+    }
 
-      console.log(`👤 User ${from} clicked: ${buttonText}`);
+    const from = message.from;
+    const formattedPhone = from.startsWith("+") ? from : `+${from}`;
 
-      // यहाँ आप अपना Prisma Logic लिख सकते हैं:
-      // if (buttonText === 'Done ✅') { updateHabitStatus(from, 'completed') }
+    let intent = '';
+    if (message.type === 'button') {
+      intent = message.button.text.toLowerCase();
+    } else if (message.type === 'text') {
+      intent = message.text.body.toLowerCase();
+    }
+
+    if (intent.includes('done') || intent.includes('skip') || intent.includes('completed') || intent.includes('yes')) {
+      const user = await prisma.user.findFirst({
+        where: { phone: formattedPhone }
+      });
+
+      if (user) {
+        // Find nearest pending todo for today
+        const pendingTodo = await prisma.todo.findFirst({
+          where: { userId: user.id, completed: false },
+          orderBy: { createdAt: 'desc' }
+        });
+
+        if (pendingTodo) {
+          const isDone = intent.includes('done') || intent.includes('completed') || intent.includes('yes');
+          
+          await prisma.todo.update({
+            where: { id: pendingTodo.id },
+            data: { 
+              completed: true,
+              completedAt: new Date(),
+            }
+          });
+
+          if (isDone) {
+            const earnedXp = (pendingTodo.plannedTime || 10) * 2;
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { xp: { increment: earnedXp } }
+            });
+            await sendMetaTextMessage(from, `✅ Great job! You earned ${earnedXp} XP for completing: ${pendingTodo.task}`);
+          } else {
+            // Skipped
+            await sendMetaTextMessage(from, `⏩ Skipped: ${pendingTodo.task}`);
+          }
+        } else {
+          await sendMetaTextMessage(from, "You don't have any pending tasks right now. Take a break! ☕");
+        }
+      }
     }
 
     return NextResponse.json({ status: 'ok' }, { status: 200 });

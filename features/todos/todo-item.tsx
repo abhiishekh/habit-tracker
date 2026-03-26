@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Bell, Clock, Check, Plus, Play, Loader2 } from "lucide-react";
+import { Clock, Check, Plus, Play, Loader2, Flame, Shield } from "lucide-react";
 import confetti from "canvas-confetti";
 import Link from "next/link";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface TodoProps {
   id?: string;
@@ -16,302 +17,292 @@ interface TodoProps {
   onToggleComplete?: (id: string, completed: boolean) => void;
 }
 
+interface Particle {
+  id: number;
+  color: string;
+  left: number;
+  top: number;
+  dx: number;
+  dy: number;
+  delay: number;
+}
+
+const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string; particle: string }> = {
+  fitness:   { bg: "bg-orange-500/10",  text: "text-orange-500",  dot: "bg-orange-400",  particle: "#f97316" },
+  health:    { bg: "bg-rose-500/10",    text: "text-rose-500",    dot: "bg-rose-400",    particle: "#f43f5e" },
+  work:      { bg: "bg-indigo-500/10",  text: "text-indigo-500",  dot: "bg-indigo-400",  particle: "#6366f1" },
+  finance:   { bg: "bg-emerald-500/10", text: "text-emerald-500", dot: "bg-emerald-400", particle: "#10b981" },
+  learning:  { bg: "bg-amber-500/10",   text: "text-amber-500",   dot: "bg-amber-400",   particle: "#f59e0b" },
+  mindset:   { bg: "bg-purple-500/10",  text: "text-purple-500",  dot: "bg-purple-400",  particle: "#a855f7" },
+  general:   { bg: "bg-sky-500/10",     text: "text-sky-500",     dot: "bg-sky-400",     particle: "#0ea5e9" },
+};
+
+function getCategoryStyle(category: string) {
+  return CATEGORY_COLORS[category?.toLowerCase()] ?? CATEGORY_COLORS["general"];
+}
+
+let audioCtx: AudioContext | null = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  return audioCtx;
+}
+
+function playDone() {
+  try {
+    const ctx = getAudioCtx();
+    if (ctx.state === "suspended") ctx.resume();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.setValueAtTime(523, ctx.currentTime);
+    o.frequency.setValueAtTime(659, ctx.currentTime + 0.08);
+    o.frequency.setValueAtTime(784, ctx.currentTime + 0.16);
+    g.gain.setValueAtTime(0.18, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    o.start(); o.stop(ctx.currentTime + 0.5);
+  } catch (_) {}
+}
+
 export function TodoItem({ id, task, reminderTime, category, status, completed, onToggleComplete }: TodoProps) {
-  const [timeLeft, setTimeLeft] = useState("");
-  const hasNotified = useRef(false);
+  const [timeLeft, setTimeLeft]       = useState("");
+  const hasNotified                   = useRef(false);
   const [isCompleted, setIsCompleted] = useState(completed || status === "completed");
-  const [loading, setLoading] = useState(false);
-  const safeDate = new Date(reminderTime);
-  const [currentTime, setCurrentTime] = useState(
-    isNaN(safeDate.getTime()) ? new Date() : safeDate
-  );
+  const [loading, setLoading]         = useState(false);
+  const [particles, setParticles]     = useState<Particle[]>([]);
+  const particleId                    = useRef(0);
+  const safeDate                      = new Date(reminderTime);
+  const [currentTime, setCurrentTime] = useState(isNaN(safeDate.getTime()) ? new Date() : safeDate);
+  const catStyle                      = getCategoryStyle(category);
 
-  const playSuccessSound = useCallback(() => {
-    const audio = new Audio("/audio/UFL_NOTIFICATION.mp3");
-    audio.volume = 0.5;
-    audio.play().catch(e => console.log("Audio play blocked by browser policies"));
+  useEffect(() => {
+    const unlock = () => { try { getAudioCtx().resume(); } catch (_) {} };
+    document.addEventListener("click", unlock, { once: true });
+    return () => document.removeEventListener("click", unlock);
   }, []);
 
-  const triggerCelebration = useCallback(() => {
-    confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ["#6366f1", "#a855f7", "#ec4899"]
+  const spawnParticles = useCallback((color: string) => {
+    const n = 12;
+    const newParticles: Particle[] = Array.from({ length: n }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const d = 30 + Math.random() * 55;
+      return {
+        id: particleId.current++,
+        color,
+        left: 18 + Math.random() * 40,
+        top: 30 + Math.random() * 30,
+        dx: Math.cos(angle) * d,
+        dy: -(Math.abs(Math.sin(angle) * d) + 8),
+        delay: Math.random() * 0.18,
+      };
     });
-    playSuccessSound();
-  }, [playSuccessSound]);
-
-  useEffect(() => {
-    const wasCompleted = isCompleted;
-    const nowCompleted = completed || status === "completed";
-    setIsCompleted(nowCompleted);
-
-    // Trigger celebration only if it transition from false to true
-    if (!wasCompleted && nowCompleted) {
-      // This handles server-side state sync or parent updates
-    }
-  }, [completed, status, isCompleted]);
-
-  // const toggleComplete = async () => {
-  //   if (!id) return;
-  //   setLoading(true);
-  //   try {
-  //     const nextState = !isCompleted;
-  //     setIsCompleted(nextState);
-  //     if (nextState) {
-  //       triggerCelebration();
-  //     }
-  //     const res = await fetch(`/api/todos/${id}`, {
-  //       method: "PATCH",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ completed: nextState }),
-  //     });
-  //     if (res.ok) {
-  //       setIsCompleted(nextState);
-  //       if (nextState) {
-  //         triggerCelebration();
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      if ("Notification" in window) {
-        if (Notification.permission !== "granted") {
-          Notification.requestPermission().catch(() => { });
-        }
-      }
-    } catch (e) {
-      console.log("Notification not supported");
-    }
-  }, []);
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        hasNotified.current = false;
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibility);
+    setParticles((p) => [...p, ...newParticles]);
+    setTimeout(() => setParticles((p) => p.filter((x) => !newParticles.find((n) => n.id === x.id))), 900);
   }, []);
 
-  const showNotification = (title: string, body: string) => {
-    try {
-      if (
-        typeof window !== "undefined" &&
-        "Notification" in window &&
-        Notification.permission === "granted"
-      ) {
-        new Notification(title, {
-          body,
-          icon: "/icon.png",
-        });
-      }
-    } catch (e) {
-      console.log("Notification failed");
-    }
-  };
+  const triggerCelebration = useCallback((color: string) => {
+    spawnParticles(color);
+    confetti({ particleCount: 80, spread: 60, origin: { y: 0.65 }, colors: [color, "#ffffff", "#10b981"] });
+    playDone();
+  }, [spawnParticles]);
+
+  useEffect(() => {
+    setIsCompleted(completed || status === "completed");
+  }, [completed, status]);
+
   const toggleComplete = async (e: React.MouseEvent) => {
     if (!id) return;
-
     const nextState = !isCompleted;
-    const isOnTime = timeLeft !== "Time's up!";
-
     setIsCompleted(nextState);
     onToggleComplete?.(id, nextState);
-    
     if (nextState) {
-      triggerCelebration();
-      
-      // Trigger leaf fly animation
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      const event = new CustomEvent('todo:leaf-fly', {
-        detail: {
-          startX: rect.left + rect.width / 2,
-          startY: rect.top + rect.height / 2,
-          isOnTime
-        }
-      });
-      window.dispatchEvent(event);
-      
-      toast.success("Task completed 🎉", {
-        description: task,
-      });
+      triggerCelebration(catStyle.particle);
+      toast.success("Task completed 🎉", { description: task });
     }
-
     try {
       await fetch(`/api/todos/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: nextState }),
       });
-    } catch (error) {
+    } catch {
       setIsCompleted(!nextState);
       toast.error("Failed to update task");
     }
   };
+
   const extendTime = async (minutes: number) => {
     if (!id) return;
     setLoading(true);
-
-    // Calculate new time: if expired, start from now. If not expired, add to existing.
     const now = new Date();
-    const baseDate = currentTime > now ? currentTime : now;
-    const newDate = new Date(baseDate.getTime() + minutes * 60000);
-
+    const base = currentTime > now ? currentTime : now;
+    const newDate = new Date(base.getTime() + minutes * 60000);
     try {
       const res = await fetch(`/api/todos/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reminderTime: newDate.toISOString(),
-          extraTime: minutes
-        }),
+        body: JSON.stringify({ reminderTime: newDate.toISOString(), extraTime: minutes }),
       });
-      if (res.ok) {
-        setCurrentTime(newDate);
-        setTimeLeft(""); // Reset so effect recalculates
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+      if (res.ok) { setCurrentTime(newDate); setTimeLeft(""); }
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => {
-    if (isCompleted) {
-      setTimeLeft("Done!");
-      return;
-    }
-
-    const calculateTime = () => {
-      if (!currentTime || isNaN(currentTime.getTime())) {
-        setTimeLeft("Invalid time");
-        return;
-      }
-      const difference = currentTime.getTime() - new Date().getTime();
-
-      if (difference <= 0) {
+    if (isCompleted) { setTimeLeft("Done!"); return; }
+    const calc = () => {
+      if (!currentTime || isNaN(currentTime.getTime())) { setTimeLeft("Invalid"); return; }
+      const diff = currentTime.getTime() - Date.now();
+      if (diff <= 0) {
         setTimeLeft("Time's up!");
-
         if (!hasNotified.current) {
           hasNotified.current = true;
-
-          showNotification("⏰ Task Reminder", `${task} is due now!`);
-          playSuccessSound();
-          toast.error("Time's up! ⏰", {
-            description: task,
-          });
+          try {
+            if ("Notification" in window && Notification.permission === "granted")
+              new Notification("⏰ Task Reminder", { body: `${task} is due now!` });
+          } catch (_) {}
+          toast.error("Time's up! ⏰", { description: task });
         }
-
         return;
       }
-
-      const hrs = Math.floor((difference / (1000 * 60 * 60)) % 24);
-      const mins = Math.floor((difference / 1000 / 60) % 60);
-      const secs = Math.floor((difference / 1000) % 60);
-
-      setTimeLeft(`${hrs}h ${mins}m ${secs}s`);
+      const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${h}h ${m}m ${s}s`);
     };
+    const t = setInterval(calc, 1000);
+    calc();
+    return () => clearInterval(t);
+  }, [currentTime, isCompleted, task]);
 
-    const timer = setInterval(() => {
-      requestAnimationFrame(calculateTime);
-    }, 1000);
-    calculateTime(); // Initial call
-
-    return () => clearInterval(timer);
-  }, [currentTime, isCompleted]);
+  const isTimeUp = timeLeft === "Time's up!";
 
   return (
-    <div className={`group flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 ${isCompleted ? 'scale-[0.98] opacity-70' : 'scale-100'}`}>
-      <div className="flex items-center gap-5 mb-5 md:mb-0">
-        <button
-          onClick={toggleComplete}
-          disabled={loading}
-          className={`h-9 w-9 rounded-xl border-2 transition-all flex items-center justify-center shrink-0 disabled:opacity-50 ${isCompleted
-            ? "bg-emerald-500 border-emerald-500 shadow-lg shadow-emerald-500/20"
-            : "border-slate-200 dark:border-zinc-800 hover:border-indigo-500 bg-slate-50 dark:bg-zinc-800/50"
-            }`}>
-          {loading ? (
-            <Loader2 size={16} className="animate-spin text-indigo-500" />
-          ) : isCompleted ? (
-            <Check size={18} className="text-white animate-in zoom-in duration-300" strokeWidth={4} />
-          ) : (
-            <div className="h-2 w-2 rounded-full bg-slate-200 dark:bg-zinc-700 group-hover:bg-indigo-400 transition-colors" />
-          )}
-        </button>
-        <div>
-          <h3 className={`text-lg font-black tracking-tight transition-all duration-500 ${isCompleted ? "text-slate-400 line-through decoration-emerald-500/50" : "text-slate-900 dark:text-slate-100"
-            }`}>{task}</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-[0.25em] font-black text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded-md">{category}</span>
-          </div>
-        </div>
-      </div>
+    <>
+      <style>{`
+        @keyframes fup-todo { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)} }
+        @keyframes todo-in { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .todo-enter { animation: todo-in .3s ease forwards; }
+      `}</style>
 
-      <div className="flex flex-col sm:flex-row items-center gap-4">
-        {timeLeft === "Time's up!" && !isCompleted && (
-          <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-700">
-            <button
-              onClick={() => extendTime(10)}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs font-bold hover:bg-orange-100 transition-all active:scale-95 border border-orange-100 dark:border-orange-500/20"
-            >
-              <Plus size={14} /> 10m
-            </button>
-            <button
-              onClick={() => extendTime(15)}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold hover:bg-amber-100 transition-all active:scale-95 border border-amber-100 dark:border-amber-500/20"
-            >
-              <Plus size={14} /> 15m
-            </button>
-          </div>
-        )}
+      <div className={cn(
+        "todo-enter group relative flex flex-col sm:flex-row sm:items-center justify-between gap-4",
+        "px-5 py-4 rounded-[1.6rem] border transition-all duration-300 overflow-hidden",
+        "bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm",
+        isCompleted
+          ? "border-emerald-500/20 opacity-70 scale-[0.985]"
+          : isTimeUp
+          ? "border-red-400/40 hover:border-red-400/70 hover:shadow-lg hover:shadow-red-500/5"
+          : "border-zinc-200/70 dark:border-zinc-800/80 hover:border-indigo-400/50 hover:shadow-xl hover:shadow-indigo-500/5"
+      )}>
+        {/* Category accent bar */}
+        <div className={cn("absolute left-0 top-4 bottom-4 w-1 rounded-full", catStyle.dot)} />
 
-        {/* Sessions Button */}
-        {!isCompleted && id && (
-          <Link
-            href={`/todos/${id}/sessions`}
-            onClick={() => {
-              toast("Entering focus mode 🧠", {
-                description: task,
-              });
+        {/* Particles */}
+        {particles.map((p) => (
+          <div
+            key={p.id}
+            className="absolute w-1.5 h-1.5 rounded-full pointer-events-none z-10"
+            style={{
+              background: p.color,
+              left: p.left, top: p.top,
+              // @ts-ignore
+              "--dx": p.dx + "px", "--dy": p.dy + "px",
+              animation: "fup-todo .82s ease-out forwards",
+              animationDelay: p.delay + "s",
             }}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-500/25"
-          >
-            <Play size={14} fill="currentColor" />
-            START FOCUS
-          </Link>
-        )}
+          />
+        ))}
 
-        {/* The Live Timer Display */}
-        <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl border transition-all duration-500 ${timeLeft === "Time's up!" ? "bg-red-50 border-red-100 dark:bg-red-500/10 dark:border-red-500/20" :
-          isCompleted ? "bg-emerald-50 border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20" :
-            "bg-slate-50 dark:bg-zinc-800/50 border-slate-100 dark:border-zinc-800/50"
-          } w-full sm:w-auto justify-center`}>
-          <Clock size={16} className={timeLeft === "Time's up!" ? "text-red-500" : isCompleted ? "text-emerald-500" : "text-slate-400"} />
-          <span className={`text-sm font-mono font-black ${timeLeft === "Time's up!" ? "text-red-500 animate-pulse" :
-            isCompleted ? "text-emerald-500" :
-              "text-slate-600 dark:text-slate-200"
-            }`}>
-            {timeLeft}
-          </span>
+        {/* Left: checkbox + content */}
+        <div className="flex items-center gap-4 pl-3 flex-1 min-w-0">
+          <button
+            onClick={toggleComplete}
+            disabled={loading}
+            className={cn(
+              "shrink-0 w-9 h-9 rounded-[0.85rem] border-2 flex items-center justify-center transition-all duration-200",
+              "disabled:opacity-50 active:scale-90",
+              isCompleted
+                ? "bg-emerald-500 border-emerald-500 shadow-md shadow-emerald-500/30"
+                : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 hover:border-indigo-400"
+            )}
+          >
+            {loading
+              ? <Loader2 size={14} className="animate-spin text-indigo-400" />
+              : isCompleted
+              ? <Check size={16} className="text-white" strokeWidth={3} />
+              : <div className={cn("w-2 h-2 rounded-full transition-colors", catStyle.dot, "opacity-40 group-hover:opacity-80")} />
+            }
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <p className={cn(
+              "text-sm font-bold leading-snug tracking-tight transition-all duration-300 truncate",
+              isCompleted ? "line-through text-zinc-400 dark:text-zinc-500" : "text-zinc-800 dark:text-zinc-100"
+            )}>
+              {task}
+            </p>
+            <span className={cn(
+              "inline-block mt-1 text-[9px] font-extrabold tracking-[.18em] uppercase px-2 py-0.5 rounded-md",
+              catStyle.bg, catStyle.text
+            )}>
+              {category}
+            </span>
+          </div>
+        </div>
+
+        {/* Right: timer + actions */}
+        <div className="flex items-center gap-2 flex-shrink-0 pl-3 sm:pl-0">
+          {/* Extend time buttons */}
+          {isTimeUp && !isCompleted && (
+            <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-right-3 duration-500">
+              <button
+                onClick={() => extendTime(10)}
+                disabled={loading}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-500 text-[10px] font-extrabold tracking-wide uppercase hover:bg-orange-100 transition-all active:scale-95 border border-orange-200/50 dark:border-orange-500/20"
+              >
+                <Plus size={11} /> 10m
+              </button>
+              <button
+                onClick={() => extendTime(15)}
+                disabled={loading}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 text-[10px] font-extrabold tracking-wide uppercase hover:bg-amber-100 transition-all active:scale-95 border border-amber-200/50 dark:border-amber-500/20"
+              >
+                <Plus size={11} /> 15m
+              </button>
+            </div>
+          )}
+
+          {/* Focus button */}
+          {!isCompleted && id && (
+            <Link
+              href={`/todos/${id}/sessions`}
+              onClick={() => toast("Entering focus mode 🧠", { description: task })}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-[0.9rem] bg-indigo-600 text-white text-[10px] font-extrabold tracking-widest uppercase hover:bg-indigo-700 transition-all active:scale-95 shadow-md shadow-indigo-500/20 whitespace-nowrap"
+            >
+              <Play size={11} fill="currentColor" />
+              Focus
+            </Link>
+          )}
+
+          {/* Timer badge */}
+          <div className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-[0.9rem] border transition-all duration-500 min-w-[110px] justify-center",
+            isTimeUp
+              ? "bg-red-50 dark:bg-red-500/10 border-red-200/60 dark:border-red-500/20"
+              : isCompleted
+              ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200/60 dark:border-emerald-500/20"
+              : "bg-zinc-50 dark:bg-zinc-800/50 border-zinc-200/60 dark:border-zinc-800"
+          )}>
+            <Clock
+              size={13}
+              className={isTimeUp ? "text-red-500" : isCompleted ? "text-emerald-500" : "text-zinc-400"}
+            />
+            <span className={cn(
+              "text-xs font-mono font-extrabold tabular-nums",
+              isTimeUp ? "text-red-500 animate-pulse" : isCompleted ? "text-emerald-500" : "text-zinc-600 dark:text-zinc-300"
+            )}>
+              {timeLeft}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

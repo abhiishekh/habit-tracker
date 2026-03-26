@@ -247,3 +247,15 @@ export async function getAdminDashboardStats() {
     chartData
   };
 }
+
+export async function getUserXp() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) return { xp: 0 };
+  
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { xp: true }
+  });
+  
+  return { xp: user?.xp || 0 };
+}

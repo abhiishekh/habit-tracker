@@ -20,6 +20,7 @@ const Nav = () => {
     const [isAuthOpen, setIsAuthOpen] = useState(false)
     const [open, setOpen] = useState(false);
     const [isPro, setIsPro] = useState(false)
+    const [xp, setXp] = useState(0);
     const { data: session, status } = useSession()
 
     const isLoggedIn = status === "authenticated"
@@ -30,19 +31,23 @@ const Nav = () => {
     useEffect(() => {
         if (!isLoggedIn) return
 
-        const fetchPlan = async () => {
+        const fetchPlanAndXp = async () => {
             try {
                 const res = await fetch("/api/subscription/limits")
-                if (!res.ok) return
-
-                const data = await res.json()
-                setIsPro(data.isPro)
+                if (res.ok) {
+                    const data = await res.json()
+                    setIsPro(data.isPro)
+                }
+                
+                const { getUserXp } = await import('@/app/action');
+                const xpData = await getUserXp();
+                setXp(xpData.xp);
             } catch (err) {
                 console.error("Failed to fetch subscription:", err)
             }
         }
 
-        fetchPlan()
+        fetchPlanAndXp()
     }, [isLoggedIn])
 
     return (
@@ -75,8 +80,13 @@ const Nav = () => {
                                 <DropdownMenuContent align="end" className="w-56">
                                     <DropdownMenuLabel>
                                         <div className="flex flex-col space-y-1">
-                                            <p className="text-sm font-medium leading-none text-slate-900 dark:text-white">{session?.user?.name}</p>
-                                            <p className="text-xs leading-none text-slate-500 dark:text-slate-400">{session?.user?.email}</p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm font-medium leading-none text-slate-900 dark:text-white">{session?.user?.name}</p>
+                                                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                                    Lvl {Math.floor(xp / 100) + 1} ({xp} XP)
+                                                </span>
+                                            </div>
+                                            <p className="text-xs leading-none text-slate-500 dark:text-slate-400 mt-1">{session?.user?.email}</p>
                                             {session?.user?.phone && (
                                                 <p className="text-[10px] leading-none text-indigo-500 font-medium pt-0.5">{session.user.phone}</p>
                                             )}

@@ -99,6 +99,7 @@ model User {
   totalStreakDays        Int                 @default(0)
   streakShields          Int                 @default(0)
   streakShieldContinuity Int                 @default(0) // Days with 50-60%+ todo completion
+  xp                     Int                 @default(0)
 
   roleLevel          Int       @default(0)
   roleTitle          String    @default("Beginner")
