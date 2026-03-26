@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { AIAgentShowcase } from './ai-agent-showcase';
 import { DataFlowVisualization } from './data-flow-visualization';
 import { TestimonialSection } from './testimonial-section';
+import HabitPlayground from './habitPlayGround';
 
 const LandingPageContent = async () => {
     const users = await prisma.waitlist.findMany({
@@ -12,6 +13,7 @@ const LandingPageContent = async () => {
     });
     return (
         <div className="w-full bg-white dark:bg-zinc-950 flex flex-col items-center">
+            <HabitPlayground />
 
             {/* --- 1. THE BENTO GRID FEATURES --- */}
             <section className="w-full max-w-6xl px-6 py-24">
